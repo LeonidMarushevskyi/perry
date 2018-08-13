@@ -1,5 +1,10 @@
 package gov.ca.cwds.security.jwt;
 
+import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.Header;
 import com.nimbusds.jose.JWEAlgorithm;
@@ -16,11 +21,6 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTClaimsSet.Builder;
 import com.nimbusds.jwt.SignedJWT;
-import java.security.GeneralSecurityException;
-import java.security.interfaces.RSAPublicKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by dmitry.rudenko on 6/30/2017.
@@ -37,14 +37,13 @@ public class JwtService {
     this.keyProvider = new JCEKSKeyProvider(configuration);
   }
 
-
   public String generate(String id, String subject, Map<String, String> customJwtClaimsMap) {
     try {
-      JWTClaimsSet claimsSet = prepareClaims(id, subject, customJwtClaimsMap);
-      SignedJWT signedJWT = sign(claimsSet);
+      final JWTClaimsSet claimsSet = prepareClaims(id, subject, customJwtClaimsMap);
+      final SignedJWT signedJWT = sign(claimsSet);
       String token;
       if (configuration.isEncryptionEnabled()) {
-        JWEObject jweObject = encrypt(signedJWT);
+        final JWEObject jweObject = encrypt(signedJWT);
         token = jweObject.serialize();
       } else {
         token = signedJWT.serialize();
@@ -56,22 +55,23 @@ public class JwtService {
   }
 
   public String generate(String id, String subject, String identity) throws JwtException {
-    Map<String, String> claimsMap = new HashMap<>();
+    final Map<String, String> claimsMap = new HashMap<>();
     claimsMap.put(IDENTITY_CLAIM, identity);
     return generate(id, subject, claimsMap);
   }
 
   public String validate(String token) throws JwtException {
     try {
-      String tokenWithHeader = addHeader(token);
+      final String tokenWithHeader = addHeader(token);
       SignedJWT signedJWT;
       if (configuration.isEncryptionEnabled()) {
         signedJWT = decrypt(tokenWithHeader);
       } else {
         signedJWT = SignedJWT.parse(tokenWithHeader);
       }
+
       validateSignature(signedJWT);
-      JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+      final JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
       validateClaims(claimsSet);
       return claimsSet.getStringClaim(IDENTITY_CLAIM);
     } catch (Exception e) {
@@ -81,10 +81,7 @@ public class JwtService {
 
   private JWEObject encrypt(SignedJWT signedJWT) throws JwtException {
     try {
-      JWEObject jweObject = new JWEObject(
-              jweHeader(),
-              new Payload(signedJWT));
-
+      final JWEObject jweObject = new JWEObject(jweHeader(), new Payload(signedJWT));
       jweObject.encrypt(new DirectEncrypter(keyProvider.getEncryptingKey().getEncoded()));
       return jweObject;
     } catch (Exception e) {
@@ -93,15 +90,14 @@ public class JwtService {
   }
 
   private JWEHeader jweHeader() {
-    return new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.parse(configuration.getEncryptionMethod()))
-            .contentType("JWT")
-            .build();
+    return new JWEHeader.Builder(JWEAlgorithm.DIR,
+        EncryptionMethod.parse(configuration.getEncryptionMethod())).contentType("JWT").build();
   }
 
   private SignedJWT sign(JWTClaimsSet claimsSet) throws JwtException {
     try {
-      JWSSigner signer = new RSASSASigner(keyProvider.getSigningKey());
-      SignedJWT signedJWT = new SignedJWT(jwsHeader(), claimsSet);
+      final JWSSigner signer = new RSASSASigner(keyProvider.getSigningKey());
+      final SignedJWT signedJWT = new SignedJWT(jwsHeader(), claimsSet);
       signedJWT.sign(signer);
       return signedJWT;
     } catch (Exception e) {
@@ -114,23 +110,20 @@ public class JwtService {
   }
 
   private JWTClaimsSet prepareClaims(String id, String subject, Map<String, String> claimsMap) {
-    long nowMillis = new Date().getTime();
-    Builder builder = new Builder()
-        .subject(subject)
-        .issueTime(new Date(nowMillis))
+    final long nowMillis = new Date().getTime();
+    final Builder builder = new Builder().subject(subject).issueTime(new Date(nowMillis))
         .issuer(configuration.getIssuer())
-        .expirationTime(new Date(nowMillis + configuration.getTimeout() * 60 * 1000))
-        .jwtID(id);
+        .expirationTime(new Date(nowMillis + configuration.getTimeout() * 60 * 1000)).jwtID(id);
 
     claimsMap.forEach(builder::claim);
-
     return builder.build();
   }
 
   private void validateSignature(SignedJWT signedJWT) throws JwtException {
     boolean verified = false;
     try {
-      verified = signedJWT.verify(new RSASSAVerifier((RSAPublicKey) keyProvider.getValidatingKey()));
+      verified =
+          signedJWT.verify(new RSASSAVerifier((RSAPublicKey) keyProvider.getValidatingKey()));
     } catch (Exception e) {
       throw new JwtException(e);
     }
@@ -141,29 +134,24 @@ public class JwtService {
 
   private SignedJWT decrypt(String token) throws JwtException {
     try {
-      SignedJWT signedJWT;
-      JWEObject jweObject = JWEObject.parse(token);
+      final JWEObject jweObject = JWEObject.parse(token);
       jweObject.decrypt(new DirectDecrypter(keyProvider.getEncryptingKey().getEncoded()));
-      signedJWT = jweObject.getPayload().toSignedJWT();
-      return signedJWT;
+      return jweObject.getPayload().toSignedJWT();
     } catch (Exception e) {
       throw new JwtException(e);
     }
   }
 
   private void validateClaims(JWTClaimsSet claims) throws JwtException {
-    if ((configuration.getIssuer() != null && !configuration.getIssuer().equals(claims.getIssuer())) ||
-            new Date().after(claims.getExpirationTime()) ||
-            claims.getClaim(IDENTITY_CLAIM) == null) {
+    if ((configuration.getIssuer() != null && !configuration.getIssuer().equals(claims.getIssuer()))
+        || new Date().after(claims.getExpirationTime())
+        || claims.getClaim(IDENTITY_CLAIM) == null) {
       fail();
     }
   }
 
   private String removeHeader(String token) {
-    if (configuration.isHeadless()) {
-      return token.substring(token.indexOf('.'));
-    }
-    return token;
+    return configuration.isHeadless() ? token.substring(token.indexOf('.')) : token;
   }
 
   private String addHeader(String token) {
@@ -177,4 +165,5 @@ public class JwtService {
   private void fail() throws JwtException {
     throw new JwtException("Token validation failed");
   }
+
 }
