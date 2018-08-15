@@ -1,10 +1,9 @@
 package gov.ca.cwds.data.persistence.auth;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Enumerated type container for CMS authorization privileges.
@@ -49,11 +48,7 @@ public final class CmsUserAuthPrivilege {
   }
 
   /**
-   * An evil singleton.
-   * <p>
-   * <p>
-   * Immutable enum service. Probably fine.
-   * </p>
+   * An evil singleton. <p> <p> Immutable enum service. Probably fine. </p>
    *
    * @return singleton instance
    */
@@ -109,9 +104,9 @@ public final class CmsUserAuthPrivilege {
   }
 
   /**
-   * Find a system code description by SYS_ID either user authorization privilege,
-   * {@link UserAuthPriv}, or authorization level (state, county, global, etc.),
-   * {@link AuthorizationLevel}.
+   * Find a system code description by SYS_ID either user authorization privilege, {@link
+   * UserAuthPriv}, or authorization level (state, county, global, etc.), {@link
+   * AuthorizationLevel}.
    *
    * @param sysId code to look up
    * @return the code's description
@@ -134,11 +129,8 @@ public final class CmsUserAuthPrivilege {
   /**
    * AUTHORITY_CODE - This represents the type of authority a designated STAFF PERSON has for a
    * particular ASSIGNMENT UNIT. The valid values are (S = Supervisor, A = Approval Authority, T =
-   * Assignment Transfer Authority, B = Both the Approval and Assignment
-   * <p>
-   * <p>
-   * Taken from table STAFF_PERSON_UNIT_AUTHORITY.
-   * </p>
+   * Assignment Transfer Authority, B = Both the Approval and Assignment <p> <p> Taken from table
+   * STAFF_PERSON_UNIT_AUTHORITY. </p>
    *
    * @author CWDS API Team
    */
@@ -342,7 +334,8 @@ public final class CmsUserAuthPrivilege {
     /**
      * Resource Management Placement Facility Maintenance
      */
-    USR_PRV_RESOURCE_MGMT_PLACEMENT_FACILITY_MAINT(1473, "Resource Mgmt Placement Facility Maint", 1460, "0015"),
+    USR_PRV_RESOURCE_MGMT_PLACEMENT_FACILITY_MAINT(1473, "Resource Mgmt Placement Facility Maint",
+        1460, "0015"),
 
     /**
      * System Administration
@@ -469,7 +462,7 @@ public final class CmsUserAuthPrivilege {
     }
 
     private UserAuthPriv(long sysId, String shortDsc, long categoryId, String orderInCategory,
-                         boolean active) {
+        boolean active) {
       this.sysId = sysId;
       this.description = shortDsc;
       this.categoryId = categoryId;

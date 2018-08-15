@@ -1,10 +1,7 @@
 package gov.ca.cwds.service;
 
-import gov.ca.cwds.data.auth.AssignmentUnitDao;
 import gov.ca.cwds.data.auth.CwsOfficeDao;
-import gov.ca.cwds.data.auth.StaffAuthorityPrivilegeDao;
 import gov.ca.cwds.data.auth.StaffPersonDao;
-import gov.ca.cwds.data.auth.StaffUnitAuthorityDao;
 import gov.ca.cwds.data.auth.UserIdDao;
 import gov.ca.cwds.data.persistence.auth.CwsOffice;
 import gov.ca.cwds.data.persistence.auth.StaffPerson;

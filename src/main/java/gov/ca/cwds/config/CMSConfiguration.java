@@ -1,7 +1,8 @@
 package gov.ca.cwds.config;
 
-import gov.ca.cwds.data.auth.AssignmentUnitDao;
+import gov.ca.cwds.data.auth.UserIdDao;
 import gov.ca.cwds.data.persistence.auth.AssignmentUnit;
+import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -16,15 +17,14 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.sql.DataSource;
-
 /**
  * Created by TPT2 on 10/27/2017.
  */
 @Configuration
-@EnableJpaRepositories(basePackageClasses = AssignmentUnitDao.class)
+@EnableJpaRepositories(basePackageClasses = UserIdDao.class)
 @EntityScan(basePackageClasses = AssignmentUnit.class)
 public class CMSConfiguration {
+
   @Bean
   @Primary
   @ConfigurationProperties("spring.datasource")
@@ -71,9 +71,9 @@ public class CMSConfiguration {
   @Autowired
   public PlatformTransactionManager tokenTransactionManager(DataSource dataSource) {
     JpaTransactionManager transactionManager
-            = new JpaTransactionManager();
+        = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(
-            entityManagerFactory(dataSource).getObject());
+        entityManagerFactory(dataSource).getObject());
     return transactionManager;
   }
 }

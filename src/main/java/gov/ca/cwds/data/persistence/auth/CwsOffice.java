@@ -6,14 +6,16 @@ import gov.ca.cwds.data.persistence.cms.CmsPersistentObject;
 import io.dropwizard.jackson.JsonSnakeCase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.annotations.Type;
-
+import java.io.Serializable;
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.Type;
 
 /**
  * {@link CmsPersistentObject} representing a CWS Office.
@@ -125,45 +127,43 @@ public class CwsOffice extends CmsPersistentObject {
   private String directorsNameTitle;
 
   /**
-   * Default constructor
-   * <p>
-   * Required for Hibernate
+   * Default constructor <p> Required for Hibernate
    */
   public CwsOffice() {
     super();
   }
 
   /**
-   * @param officeId                    the primary key
-   * @param faxNumber                   the faxNumber
-   * @param geographicRegionTextCode    geographicRegionTextCode
-   * @param governmentEntityType        governmentEntityType
-   * @param headquarterIndicator        headquarterIndicator
-   * @param inactiveIndicator           inactiveIndicator
-   * @param mailStopDescription         mailStopDescription
-   * @param messagePhoneNumber          messagePhoneNumber
+   * @param officeId the primary key
+   * @param faxNumber the faxNumber
+   * @param geographicRegionTextCode geographicRegionTextCode
+   * @param governmentEntityType governmentEntityType
+   * @param headquarterIndicator headquarterIndicator
+   * @param inactiveIndicator inactiveIndicator
+   * @param mailStopDescription mailStopDescription
+   * @param messagePhoneNumber messagePhoneNumber
    * @param messagePhoneExtensionNumber the messagePhoneExtensionNumber
-   * @param cwsOffNumber                the cwsOffNumber
-   * @param primaryPhoneNumber          the primaryPhoneNumber
+   * @param cwsOffNumber the cwsOffNumber
+   * @param primaryPhoneNumber the primaryPhoneNumber
    * @param primaryPhoneExtensionNumber the primaryPhoneExtensionNumber
-   * @param staffPersonId               the staffPersonId
-   * @param commentDescription          the commentDescription
-   * @param agencyName                  the agencyName
-   * @param departmentDivisionName      the departmentDivisionName
-   * @param cwsOfficeName               the cwsOfficeName
-   * @param countySpecificCode          the countySpecificCode
-   * @param agencyCodeNumber            the agencyCodeNumber
-   * @param locationCountyType          the locationCountyType
-   * @param directorsNameTitle          the directorsNameTitle
+   * @param staffPersonId the staffPersonId
+   * @param commentDescription the commentDescription
+   * @param agencyName the agencyName
+   * @param departmentDivisionName the departmentDivisionName
+   * @param cwsOfficeName the cwsOfficeName
+   * @param countySpecificCode the countySpecificCode
+   * @param agencyCodeNumber the agencyCodeNumber
+   * @param locationCountyType the locationCountyType
+   * @param directorsNameTitle the directorsNameTitle
    */
   public CwsOffice(String officeId, Long faxNumber, String geographicRegionTextCode,
-                   Short governmentEntityType, String headquarterIndicator, String inactiveIndicator,
-                   String mailStopDescription, Long messagePhoneNumber,
-                   Integer messagePhoneExtensionNumber, String cwsOffNumber, Long primaryPhoneNumber,
-                   Integer primaryPhoneExtensionNumber, String staffPersonId, String commentDescription,
-                   String agencyName, String departmentDivisionName, String cwsOfficeName,
-                   String countySpecificCode, Short agencyCodeNumber, Short locationCountyType,
-                   String directorsNameTitle) {
+      Short governmentEntityType, String headquarterIndicator, String inactiveIndicator,
+      String mailStopDescription, Long messagePhoneNumber,
+      Integer messagePhoneExtensionNumber, String cwsOffNumber, Long primaryPhoneNumber,
+      Integer primaryPhoneExtensionNumber, String staffPersonId, String commentDescription,
+      String agencyName, String departmentDivisionName, String cwsOfficeName,
+      String countySpecificCode, Short agencyCodeNumber, Short locationCountyType,
+      String directorsNameTitle) {
     super();
     this.officeId = officeId;
     this.faxNumber = faxNumber;
@@ -341,234 +341,71 @@ public class CwsOffice extends CmsPersistentObject {
     return directorsNameTitle;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#hashCode()
-   */
   @Override
-  public final int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((agencyCodeNumber == null) ? 0 : agencyCodeNumber.hashCode());
-    result = prime * result + ((agencyName == null) ? 0 : agencyName.hashCode());
-    result = prime * result + ((commentDescription == null) ? 0 : commentDescription.hashCode());
-    result = prime * result + ((countySpecificCode == null) ? 0 : countySpecificCode.hashCode());
-    result = prime * result + ((cwsOffNumber == null) ? 0 : cwsOffNumber.hashCode());
-    result = prime * result + ((cwsOfficeName == null) ? 0 : cwsOfficeName.hashCode());
-    result =
-            prime * result + ((departmentDivisionName == null) ? 0 : departmentDivisionName.hashCode());
-    result = prime * result + ((directorsNameTitle == null) ? 0 : directorsNameTitle.hashCode());
-    result = prime * result + ((faxNumber == null) ? 0 : faxNumber.hashCode());
-    result =
-            prime * result
-                    + ((geographicRegionTextCode == null) ? 0 : geographicRegionTextCode.hashCode());
-    result =
-            prime * result + ((governmentEntityType == null) ? 0 : governmentEntityType.hashCode());
-    result =
-            prime * result + ((headquarterIndicator == null) ? 0 : headquarterIndicator.hashCode());
-    result = prime * result + ((inactiveIndicator == null) ? 0 : inactiveIndicator.hashCode());
-    result = prime * result + ((locationCountyType == null) ? 0 : locationCountyType.hashCode());
-    result = prime * result + ((mailStopDescription == null) ? 0 : mailStopDescription.hashCode());
-    result =
-            prime * result
-                    + ((messagePhoneExtensionNumber == null) ? 0 : messagePhoneExtensionNumber.hashCode());
-    result = prime * result + ((messagePhoneNumber == null) ? 0 : messagePhoneNumber.hashCode());
-    result = prime * result + ((officeId == null) ? 0 : officeId.hashCode());
-    result =
-            prime * result
-                    + ((primaryPhoneExtensionNumber == null) ? 0 : primaryPhoneExtensionNumber.hashCode());
-    result = prime * result + ((primaryPhoneNumber == null) ? 0 : primaryPhoneNumber.hashCode());
-    result = prime * result + ((staffPersonId == null) ? 0 : staffPersonId.hashCode());
-    result =
-            prime * result
-                    + ((super.getLastUpdatedId() == null) ? 0 : super.getLastUpdatedId().hashCode());
-    result =
-            prime * result
-                    + ((super.getLastUpdatedTime() == null) ? 0 : super.getLastUpdatedTime().hashCode());
-
-    return result;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
-  @Override
-  public final boolean equals(Object obj) {
-    if (this == obj) {
+  public final boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    if (obj == null) {
+
+    if (!(o instanceof CwsOffice)) {
       return false;
     }
-    if (!(obj instanceof CwsOffice)) {
-      return false;
-    }
-    CwsOffice other = (CwsOffice) obj;
-    if (agencyCodeNumber == null) {
-      if (other.agencyCodeNumber != null) {
-        return false;
-      }
-    } else if (!agencyCodeNumber.equals(other.agencyCodeNumber)) {
-      return false;
-    }
-    if (agencyName == null) {
-      if (other.agencyName != null) {
-        return false;
-      }
-    } else if (!agencyName.equals(other.agencyName)) {
-      return false;
-    }
-    if (commentDescription == null) {
-      if (other.commentDescription != null) {
-        return false;
-      }
-    } else if (!commentDescription.equals(other.commentDescription)) {
-      return false;
-    }
-    if (countySpecificCode == null) {
-      if (other.countySpecificCode != null) {
-        return false;
-      }
-    } else if (!countySpecificCode.equals(other.countySpecificCode)) {
-      return false;
-    }
-    if (cwsOffNumber == null) {
-      if (other.cwsOffNumber != null) {
-        return false;
-      }
-    } else if (!cwsOffNumber.equals(other.cwsOffNumber)) {
-      return false;
-    }
-    if (cwsOfficeName == null) {
-      if (other.cwsOfficeName != null) {
-        return false;
-      }
-    } else if (!cwsOfficeName.equals(other.cwsOfficeName)) {
-      return false;
-    }
-    if (departmentDivisionName == null) {
-      if (other.departmentDivisionName != null) {
-        return false;
-      }
-    } else if (!departmentDivisionName.equals(other.departmentDivisionName)) {
-      return false;
-    }
-    if (directorsNameTitle == null) {
-      if (other.directorsNameTitle != null) {
-        return false;
-      }
-    } else if (!directorsNameTitle.equals(other.directorsNameTitle)) {
-      return false;
-    }
-    if (faxNumber == null) {
-      if (other.faxNumber != null) {
-        return false;
-      }
-    } else if (!faxNumber.equals(other.faxNumber)) {
-      return false;
-    }
-    if (geographicRegionTextCode == null) {
-      if (other.geographicRegionTextCode != null) {
-        return false;
-      }
-    } else if (!geographicRegionTextCode.equals(other.geographicRegionTextCode)) {
-      return false;
-    }
-    if (governmentEntityType == null) {
-      if (other.governmentEntityType != null) {
-        return false;
-      }
-    } else if (!governmentEntityType.equals(other.governmentEntityType)) {
-      return false;
-    }
-    if (headquarterIndicator == null) {
-      if (other.headquarterIndicator != null) {
-        return false;
-      }
-    } else if (!headquarterIndicator.equals(other.headquarterIndicator)) {
-      return false;
-    }
-    if (inactiveIndicator == null) {
-      if (other.inactiveIndicator != null) {
-        return false;
-      }
-    } else if (!inactiveIndicator.equals(other.inactiveIndicator)) {
-      return false;
-    }
-    if (locationCountyType == null) {
-      if (other.locationCountyType != null) {
-        return false;
-      }
-    } else if (!locationCountyType.equals(other.locationCountyType)) {
-      return false;
-    }
-    if (mailStopDescription == null) {
-      if (other.mailStopDescription != null) {
-        return false;
-      }
-    } else if (!mailStopDescription.equals(other.mailStopDescription)) {
-      return false;
-    }
-    if (messagePhoneExtensionNumber == null) {
-      if (other.messagePhoneExtensionNumber != null) {
-        return false;
-      }
-    } else if (!messagePhoneExtensionNumber.equals(other.messagePhoneExtensionNumber)) {
-      return false;
-    }
-    if (messagePhoneNumber == null) {
-      if (other.messagePhoneNumber != null) {
-        return false;
-      }
-    } else if (!messagePhoneNumber.equals(other.messagePhoneNumber)) {
-      return false;
-    }
-    if (officeId == null) {
-      if (other.officeId != null) {
-        return false;
-      }
-    } else if (!officeId.equals(other.officeId)) {
-      return false;
-    }
-    if (primaryPhoneExtensionNumber == null) {
-      if (other.primaryPhoneExtensionNumber != null) {
-        return false;
-      }
-    } else if (!primaryPhoneExtensionNumber.equals(other.primaryPhoneExtensionNumber)) {
-      return false;
-    }
-    if (primaryPhoneNumber == null) {
-      if (other.primaryPhoneNumber != null) {
-        return false;
-      }
-    } else if (!primaryPhoneNumber.equals(other.primaryPhoneNumber)) {
-      return false;
-    }
-    if (staffPersonId == null) {
-      if (other.staffPersonId != null) {
-        return false;
-      }
-    } else if (!staffPersonId.equals(other.staffPersonId)) {
-      return false;
-    }
-    if (super.getLastUpdatedId() == null) {
-      if (other.getLastUpdatedId() != null) {
-        return false;
-      }
-    } else if (!super.getLastUpdatedId().equals(other.getLastUpdatedId())) {
-      return false;
-    }
-    if (super.getLastUpdatedTime() == null) {
-      if (other.getLastUpdatedTime() != null) {
-        return false;
-      }
-    } else if (!super.getLastUpdatedTime().equals(other.getLastUpdatedTime())) {
-      return false;
-    }
-    return true;
+
+    CwsOffice cwsOffice = (CwsOffice) o;
+
+    return new EqualsBuilder()
+        .append(officeId, cwsOffice.officeId)
+        .append(governmentEntityType, cwsOffice.governmentEntityType)
+        .append(faxNumber, cwsOffice.faxNumber)
+        .append(geographicRegionTextCode, cwsOffice.geographicRegionTextCode)
+        .append(headquarterIndicator, cwsOffice.headquarterIndicator)
+        .append(inactiveIndicator, cwsOffice.inactiveIndicator)
+        .append(mailStopDescription, cwsOffice.mailStopDescription)
+        .append(messagePhoneNumber, cwsOffice.messagePhoneNumber)
+        .append(messagePhoneExtensionNumber, cwsOffice.messagePhoneExtensionNumber)
+        .append(cwsOffNumber, cwsOffice.cwsOffNumber)
+        .append(primaryPhoneNumber, cwsOffice.primaryPhoneNumber)
+        .append(primaryPhoneExtensionNumber, cwsOffice.primaryPhoneExtensionNumber)
+        .append(staffPersonId, cwsOffice.staffPersonId)
+        .append(commentDescription, cwsOffice.commentDescription)
+        .append(agencyName, cwsOffice.agencyName)
+        .append(departmentDivisionName, cwsOffice.departmentDivisionName)
+        .append(cwsOfficeName, cwsOffice.cwsOfficeName)
+        .append(countySpecificCode, cwsOffice.countySpecificCode)
+        .append(agencyCodeNumber, cwsOffice.agencyCodeNumber)
+        .append(locationCountyType, cwsOffice.locationCountyType)
+        .append(directorsNameTitle, cwsOffice.directorsNameTitle)
+        .append(getLastUpdatedId(), cwsOffice.getLastUpdatedId())
+        .append(getLastUpdatedTime(), cwsOffice.getLastUpdatedTime())
+        .isEquals();
   }
 
+  @Override
+  public final int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .append(officeId)
+        .append(governmentEntityType)
+        .append(faxNumber)
+        .append(geographicRegionTextCode)
+        .append(headquarterIndicator)
+        .append(inactiveIndicator)
+        .append(mailStopDescription)
+        .append(messagePhoneNumber)
+        .append(messagePhoneExtensionNumber)
+        .append(cwsOffNumber)
+        .append(primaryPhoneNumber)
+        .append(primaryPhoneExtensionNumber)
+        .append(staffPersonId)
+        .append(commentDescription)
+        .append(agencyName)
+        .append(departmentDivisionName)
+        .append(cwsOfficeName)
+        .append(countySpecificCode)
+        .append(agencyCodeNumber)
+        .append(locationCountyType)
+        .append(directorsNameTitle)
+        .append(getLastUpdatedId())
+        .append(getLastUpdatedTime())
+        .toHashCode();
+  }
 }

@@ -1,10 +1,7 @@
 package gov.ca.cwds.service;
 
-import gov.ca.cwds.data.auth.AssignmentUnitDao;
 import gov.ca.cwds.data.auth.CwsOfficeDao;
-import gov.ca.cwds.data.auth.StaffAuthorityPrivilegeDao;
 import gov.ca.cwds.data.auth.StaffPersonDao;
-import gov.ca.cwds.data.auth.StaffUnitAuthorityDao;
 import gov.ca.cwds.data.auth.UserIdDao;
 import gov.ca.cwds.data.persistence.auth.CwsOffice;
 import gov.ca.cwds.data.persistence.auth.StaffPerson;
@@ -14,14 +11,6 @@ import gov.ca.cwds.rest.api.domain.auth.StaffAuthorityPrivilege;
 import gov.ca.cwds.rest.api.domain.auth.StaffUnitAuthority;
 import gov.ca.cwds.rest.services.CrudsService;
 import gov.ca.cwds.service.dto.CwsUserInfo;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +21,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional("transactionManager")
@@ -41,12 +37,12 @@ public class CwsUserInfoService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CwsUserInfoService.class);
 
-  @Autowired private UserIdDao userIdDao;
-  @Autowired private StaffAuthorityPrivilegeDao staffAuthorityPrivilegeDao;
-  @Autowired private StaffUnitAuthorityDao staffUnitAuthorityDao;
-  @Autowired private CwsOfficeDao cwsOfficeDao;
-  @Autowired private AssignmentUnitDao assignmentUnitDao;
-  @Autowired private StaffPersonDao staffPersonDao;
+  @Autowired
+  private UserIdDao userIdDao;
+  @Autowired
+  private CwsOfficeDao cwsOfficeDao;
+  @Autowired
+  private StaffPersonDao staffPersonDao;
 
   /**
    * {@inheritDoc}
@@ -60,23 +56,21 @@ public class CwsUserInfoService {
       return null;
     }
     UserId user = userId.get();
-    String userIdentifier = user.getId();
-    String staffPersonIdentifier = user.getStaffPersonId();
-    return getCwsUserInfo(user, userIdentifier, staffPersonIdentifier);
+    return getCwsUserInfo(user);
   }
 
   //just because of codeclimate 25 lines of code allowed rule
-  private CwsUserInfo getCwsUserInfo(UserId user, String userIdentifier, String staffPersonIdentifier) {
-    boolean socialWorker = !staffAuthorityPrivilegeDao.findSocialWorkerPrivileges(userIdentifier).isEmpty();
-    Set<StaffAuthorityPrivilege> userAuthPrivs = getStaffAuthorityPriveleges(userIdentifier);
-    Set<StaffUnitAuthority> setStaffUnitAuths = getStaffUnitAuthorities(staffPersonIdentifier);
-    StaffPerson staffPerson = staffPersonDao.findOne(staffPersonIdentifier);
+  private CwsUserInfo getCwsUserInfo(UserId user) {
+    boolean socialWorker = isSocialWorker(user);
+    Set<StaffAuthorityPrivilege> userAuthPrivs = getStaffAuthorityPriveleges(user);
+    Set<StaffUnitAuthority> setStaffUnitAuths = getStaffUnitAuthorities(user);
+    StaffPerson staffPerson = user.getStaffPerson();
     if (staffPerson == null) {
-      LOGGER.warn("No staff person found for {}", staffPersonIdentifier);
+      LOGGER.warn("No staff person found for {}", user.getStaffPersonId());
       return null;
     }
 
-    CwsOffice cwsOffice = cwsOfficeDao.findOne(staffPerson.getCwsOffice());
+    CwsOffice cwsOffice = staffPerson.getOffice();
     if (cwsOffice == null) {
       LOGGER.warn("No cws office found for {}", staffPerson.getCwsOffice());
       return null;
@@ -92,22 +86,29 @@ public class CwsUserInfoService {
         .build();
   }
 
+  private boolean isSocialWorker(UserId userId) {
+    return Optional.ofNullable(userId.getPrivileges())
+        .orElse(Collections.emptySet()).stream()
+        .anyMatch(p -> p.getLevelOfAuthPrivilegeType() == 1468 &&
+            "P".equals(p.getLevelOfAuthPrivilegeCode()));
+  }
+
   public List<CwsUserInfo> findUsers(Collection<String> racfIds) {
     List<String> filtered = racfIds.stream().filter(Objects::nonNull)
-            .filter(e -> e.length() <= RACFID_MAX_LENGTH).collect(Collectors.toList());
+        .filter(e -> e.length() <= RACFID_MAX_LENGTH).collect(Collectors.toList());
     if (CollectionUtils.isEmpty(filtered)) {
       return Collections.emptyList();
     }
     List<UserId> userIdList = userIdDao.findActiveByLogonIdIn(filtered);
     List<String> staffPersonIds = userIdList.stream().map(UserId::getStaffPersonId)
-            .filter(Objects::nonNull).collect(Collectors.toList());
+        .filter(Objects::nonNull).collect(Collectors.toList());
 
     Map<String, StaffPerson> idToStaffperson =
         StreamSupport.stream(staffPersonDao.findByIdIn(staffPersonIds).spliterator(), false)
             .collect(Collectors.toMap(StaffPerson::getId, e -> e));
 
     List<String> offices = idToStaffperson.values().stream().map(StaffPerson::getCwsOffice)
-            .filter(Objects::nonNull).collect(Collectors.toList());
+        .filter(Objects::nonNull).collect(Collectors.toList());
 
     Map<String, CwsOffice> idToOffice =
         StreamSupport.stream(cwsOfficeDao.findByOfficeIdIn(offices).spliterator(), false)
@@ -135,22 +136,21 @@ public class CwsUserInfoService {
     if (logonId.length() > RACFID_MAX_LENGTH) {
       return Optional.empty();
     }
-    List<UserId> userList = userIdDao.findActiveByLogonId(logonId);
-    if (CollectionUtils.isEmpty(userList)) {
+    Set<UserId> users = userIdDao.findActiveByLogonId(logonId);
+    if (CollectionUtils.isEmpty(users)) {
       return Optional.empty();
     }
-    return Optional.of(userList.get(0));
+    return Optional.of(users.iterator().next());
   }
 
   /**
    * Gets the {@link StaffUnitAuthority} for a StaffPerson
    *
-   * @param staffPersonId The Staff Person Id
+   * @param user The User Id
    * @return Set of StaffUnitAuthority for the Staff Person
    */
-  private Set<StaffUnitAuthority> getStaffUnitAuthorities(String staffPersonId) {
-    return this.staffUnitAuthorityDao
-        .findByStaffPersonId(staffPersonId)
+  private Set<StaffUnitAuthority> getStaffUnitAuthorities(UserId user) {
+    return user.getStaffPerson().getUnitAuthorities()
         .stream()
         .map(
             staffUnitAuth -> {
@@ -158,9 +158,8 @@ public class CwsUserInfoService {
               String assignedUnitKey = staffUnitAuth.getFkasgUnit().trim();
               String assignedUnitEndDate = "";
               if (StringUtils.isNotBlank(assignedUnitKey)) {
-                final gov.ca.cwds.data.persistence.auth.AssignmentUnit assignmentUnit =
-                    this.assignmentUnitDao.findOne(assignedUnitKey);
-                assignedUnitEndDate = DomainChef.cookDate(assignmentUnit.getEndDate());
+                assignedUnitEndDate = DomainChef
+                    .cookDate(staffUnitAuth.getAssignmentUnit().getEndDate());
               }
               return new StaffUnitAuthority(
                   staffUnitAuth.getAuthorityCode(),
@@ -178,9 +177,8 @@ public class CwsUserInfoService {
    * @param userId the User Identifier
    * @return Set of StaffAuthorityPrivilege for the User
    */
-  private Set<StaffAuthorityPrivilege> getStaffAuthorityPriveleges(String userId) {
-    return this.staffAuthorityPrivilegeDao
-        .findByUserId(userId)
+  private Set<StaffAuthorityPrivilege> getStaffAuthorityPriveleges(UserId userId) {
+    return userId.getPrivileges()
         .stream()
         .map(
             priv ->
@@ -196,20 +194,8 @@ public class CwsUserInfoService {
     this.userIdDao = userIdDao;
   }
 
-  public void setStaffAuthorityPrivilegeDao(StaffAuthorityPrivilegeDao staffAuthorityPrivilegeDao) {
-    this.staffAuthorityPrivilegeDao = staffAuthorityPrivilegeDao;
-  }
-
-  public void setStaffUnitAuthorityDao(StaffUnitAuthorityDao staffUnitAuthorityDao) {
-    this.staffUnitAuthorityDao = staffUnitAuthorityDao;
-  }
-
   public void setCwsOfficeDao(CwsOfficeDao cwsOfficeDao) {
     this.cwsOfficeDao = cwsOfficeDao;
-  }
-
-  public void setAssignmentUnitDao(AssignmentUnitDao assignmentUnitDao) {
-    this.assignmentUnitDao = assignmentUnitDao;
   }
 
   public void setStaffPersonDao(StaffPersonDao staffPersonDao) {
