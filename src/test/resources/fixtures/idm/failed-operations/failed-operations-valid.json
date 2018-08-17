@@ -1,0 +1,68 @@
+[
+  {
+    "user": {
+      "id": "d740ec1d-80ae-4d84-a8c4-9bed7a942f5b",
+      "email": "garcia@gmail.com",
+      "first_name": "Garcia",
+      "last_name": "Gonzales",
+      "county_name": "Yolo",
+      "racfid": "SMITHBO",
+      "start_date": "1980-08-08",
+      "office": "Tolo Office",
+      "phone_number": "4646464646",
+      "phone_extension_number": "11",
+      "user_create_date": "2018-05-03",
+      "user_last_modified_date": "2018-05-31",
+      "enabled": true,
+      "status": "CONFIRMED",
+      "permissions": [
+        "test"
+      ]
+    },
+    "operation": "UPDATE"
+  },
+  {
+    "user": {
+      "id": "24051d54-9321-4dd2-a92f-6425d6c455be",
+      "email": "julio@gmail.com",
+      "first_name": "Julio",
+      "last_name": "Iglecias",
+      "county_name": "Yolo",
+      "racfid": "YOLOD",
+      "user_create_date": "2018-05-04",
+      "user_last_modified_date": "2018-05-29",
+      "enabled": true,
+      "status": "CONFIRMED",
+      "permissions": [
+        "Hotline-rollout"
+      ],
+      "roles": [
+        "CWS-admin",
+        "CWS-worker"
+      ]
+    },
+    "operation": "UPDATE"
+  },
+  {
+    "user": {
+      "id": "2be3221f-8c2f-4386-8a95-a68f0282efb0",
+      "email": "donzano@gmail.com",
+      "first_name": "Don",
+      "last_name": "Manzano",
+      "county_name": "Yolo",
+      "user_create_date": "2018-05-04",
+      "user_last_modified_date": "2018-05-30",
+      "enabled": true,
+      "status": "FORCE_CHANGE_PASSWORD",
+      "permissions": [
+        "Snapshot-rollout",
+        "RFA-rollout"
+      ],
+      "roles": [
+        "CWS-admin",
+        "CWS-worker"
+      ]
+    },
+    "operation": "CREATE"
+  }
+]

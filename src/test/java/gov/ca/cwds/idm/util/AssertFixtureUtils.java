@@ -15,20 +15,20 @@ public final class AssertFixtureUtils {
   }
 
   public static void assertStrict(MvcResult result, String fixturePath) throws IOException, JSONException {
-    assertWithFixture(result, fixturePath, true);
+    assertWithFixture(result, fixturePath, JSONCompareMode.STRICT);
   }
 
   public static void assertNonStrict(MvcResult result, String fixturePath) throws IOException, JSONException {
-    assertWithFixture(result, fixturePath, false);
+    assertWithFixture(result, fixturePath, JSONCompareMode.NON_EXTENSIBLE);
   }
 
-  private static void assertWithFixture(MvcResult result, String fixturePath, boolean strict) throws IOException, JSONException {
+  public static void assertExtensible(MvcResult result, String fixturePath) throws IOException, JSONException {
+    assertWithFixture(result, fixturePath, JSONCompareMode.LENIENT);
+  }
+
+  private static void assertWithFixture(MvcResult result, String fixturePath, JSONCompareMode mode) throws IOException, JSONException {
     MockHttpServletResponse response = result.getResponse();
     String strResponse = response.getContentAsString();
-    if(strict) {
-      JSONAssert.assertEquals(fixture(fixturePath), strResponse, JSONCompareMode.STRICT);
-    } else {
-      JSONAssert.assertEquals(fixture(fixturePath), strResponse, JSONCompareMode.NON_EXTENSIBLE);
-    }
+    JSONAssert.assertEquals(fixture(fixturePath), strResponse, mode);
   }
 }

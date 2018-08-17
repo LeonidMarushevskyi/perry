@@ -2,10 +2,12 @@ package gov.ca.cwds.idm;
 
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.RACFID_STANDARD;
 import static gov.ca.cwds.service.messages.MessageCode.IDM_USER_VALIDATION_FAILED;
+import static gov.ca.cwds.service.messages.MessageCode.INVALIDE_DATE_FORMAT;
 import static gov.ca.cwds.service.messages.MessageCode.USER_WITH_EMAIL_EXISTS_IN_IDM;
 
 import gov.ca.cwds.idm.dto.IdmApiCustomError;
 import gov.ca.cwds.idm.dto.User;
+import gov.ca.cwds.idm.dto.UserAndOperation;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.dto.UserVerificationResult;
 import gov.ca.cwds.idm.dto.UsersPage;
@@ -17,15 +19,21 @@ import gov.ca.cwds.rest.api.domain.UserAlreadyExistsException;
 import gov.ca.cwds.rest.api.domain.UserIdmValidationException;
 import gov.ca.cwds.rest.api.domain.UserNotFoundPerryException;
 import gov.ca.cwds.service.messages.MessageCode;
+import gov.ca.cwds.service.messages.MessagesService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.net.URI;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
@@ -46,9 +54,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @SuppressWarnings({"squid:S1166"})
 public class IdmResource {
 
+  public static final String DATETIME_FORMAT_PATTERN = "yyyy-MM-dd-HH.mm.ss.SSS";
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(IdmResource.class);
+
   @Autowired private IdmService idmService;
 
   @Autowired private DictionaryProvider dictionaryProvider;
+
+  @Autowired private MessagesService messages;
 
   @RequestMapping(method = RequestMethod.GET, value = "/users", produces = "application/json")
   @ApiOperation(
@@ -78,13 +92,47 @@ public class IdmResource {
   @ApiOperation(
     value = "Search users with given RACFIDs list",
     response = User.class,
-    responseContainer = "List"
+    responseContainer = "List",
+    notes = "This service is used by batch job to build the ES index. The client of this service should have 'IDM-job' role."
   )
   @PreAuthorize("hasAuthority('IDM-job')")
   public List<User> searchUsersByRacfid(
       @ApiParam(required = true, name = "RACFIDs", value = "List of RACFIDs") @NotNull @RequestBody
           Set<String> racfids) {
     return idmService.searchUsers(new UsersSearchCriteria(RACFID_STANDARD, racfids));
+  }
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "/users/failed-operations",
+      produces = "application/json"
+  )
+  @ApiResponses(value = {
+      @ApiResponse(code = 401, message = "Not Authorized"),
+      @ApiResponse(code = 400, message = "Bad Request")
+  })
+  @ApiOperation(
+      value = "Get list of failed User creates and updates in Dora",
+      response = UserAndOperation.class,
+      responseContainer = "List",
+      notes = "This service is used by batch job to build the ES index. The client of this service should have 'IDM-job' role."
+  )
+  @PreAuthorize("hasAuthority('IDM-job')")
+  public ResponseEntity getFailedOperations(
+      @ApiParam(required = true, name = "date",
+          value = "Last date of successful batch job execution in yyyy-MM-dd-HH.mm.ss.SSS format")
+      @RequestParam(name = "date")
+          String lastJobDateStr) {
+
+    Date lastJobTime;
+    try {
+      lastJobTime = new SimpleDateFormat(DATETIME_FORMAT_PATTERN).parse(lastJobDateStr);
+    } catch (ParseException e) {
+      String msg = messages.get(INVALIDE_DATE_FORMAT, DATETIME_FORMAT_PATTERN);
+      LOGGER.error(msg, e);
+      return createCustomResponseEntity(HttpStatus.BAD_REQUEST, INVALIDE_DATE_FORMAT, msg);
+    }
+    return ResponseEntity.ok().body(idmService.getFailedOperations(lastJobTime));
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/users/{id}", produces = "application/json")

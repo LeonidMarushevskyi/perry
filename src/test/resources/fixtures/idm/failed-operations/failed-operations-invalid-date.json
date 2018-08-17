@@ -1,0 +1,5 @@
+{
+  "error_code":"CAP-017",
+  "message":"Invalid Date format. Use please: yyyy-MM-dd-HH.mm.ss.SSS",
+  "status":"BAD_REQUEST"
+}

@@ -1,5 +1,7 @@
 package gov.ca.cwds.idm.service;
 
+import static gov.ca.cwds.idm.persistence.model.OperationType.CREATE;
+import static gov.ca.cwds.idm.persistence.model.OperationType.UPDATE;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.EMAIL;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.RACFID_STANDARD;
 import static gov.ca.cwds.idm.service.cognito.util.CognitoUsersSearchCriteriaUtil.composeToGetFirstPageByEmail;
@@ -20,10 +22,13 @@ import gov.ca.cwds.PerryProperties;
 import gov.ca.cwds.data.persistence.auth.CwsOffice;
 import gov.ca.cwds.data.persistence.auth.StaffPerson;
 import gov.ca.cwds.idm.dto.User;
+import gov.ca.cwds.idm.dto.UserAndOperation;
+import gov.ca.cwds.idm.dto.UserIdAndOperation;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.dto.UserVerificationResult;
 import gov.ca.cwds.idm.dto.UsersPage;
 import gov.ca.cwds.idm.dto.UsersSearchCriteria;
+import gov.ca.cwds.idm.persistence.model.OperationType;
 import gov.ca.cwds.idm.service.cognito.CognitoServiceFacade;
 import gov.ca.cwds.idm.service.cognito.StandardUserAttribute;
 import gov.ca.cwds.idm.service.cognito.dto.CognitoUserPage;
@@ -41,6 +46,7 @@ import gov.ca.cwds.util.Utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,6 +135,36 @@ public class IdmServiceImpl implements IdmService {
       cognitoUsers.addAll(cognitoServiceFacade.searchAllPages(cognitoSearchCriteria));
     }
     return enrichCognitoUsersByCws(cognitoUsers);
+  }
+
+  @Override
+  public List<UserAndOperation> getFailedOperations(Date lastJobTime) {
+
+    List<UserIdAndOperation> dbList = userLogService.getUserIdAndOperations(lastJobTime);
+
+    return filterIdAndOperationList(dbList)
+        .stream()
+        .map(e -> new UserAndOperation(findUser(e.getId()), e.getOperation()))
+        .collect(Collectors.toList());
+  }
+
+  private static List<UserIdAndOperation> filterIdAndOperationList(List<UserIdAndOperation> inputList) {
+    Map<String, OperationType> idAndOperationMap = new HashMap<>();
+
+    for (UserIdAndOperation userIdAndOperation : inputList) {
+      String userId = userIdAndOperation.getId();
+      OperationType operation = userIdAndOperation.getOperation();
+      OperationType existedOperation = idAndOperationMap.get(userId);
+
+      if (existedOperation == null || (existedOperation == CREATE && operation == UPDATE)) {
+        idAndOperationMap.put(userId, operation);
+      }
+    }
+
+    return idAndOperationMap.entrySet()
+        .stream()
+        .map(e -> new UserIdAndOperation(e.getKey(), e.getValue()))
+        .collect(Collectors.toList());
   }
 
   @Override

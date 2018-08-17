@@ -1,9 +1,12 @@
 package gov.ca.cwds.idm.service.cognito;
 
+import static gov.ca.cwds.idm.persistence.model.OperationType.GET;
+import static gov.ca.cwds.idm.persistence.model.OperationType.UPDATE;
 import static gov.ca.cwds.idm.service.cognito.util.CognitoUtils.EMAIL_DELIVERY;
 import static gov.ca.cwds.idm.service.cognito.util.CognitoUtils.buildCreateUserAttributes;
 import static gov.ca.cwds.idm.service.cognito.util.CognitoUtils.createPermissionsAttribute;
 import static gov.ca.cwds.service.messages.MessageCode.ERROR_CONNECT_TO_IDM;
+import static gov.ca.cwds.service.messages.MessageCode.ERROR_GET_USER_FROM_IDM;
 import static gov.ca.cwds.service.messages.MessageCode.ERROR_UPDATE_USER_IN_IDM;
 import static gov.ca.cwds.service.messages.MessageCode.IDM_USER_VALIDATION_FAILED;
 import static gov.ca.cwds.service.messages.MessageCode.UNABLE_CREATE_NEW_IDM_USER;
@@ -36,6 +39,7 @@ import com.amazonaws.services.cognitoidp.model.UserType;
 import com.amazonaws.services.cognitoidp.model.UsernameExistsException;
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
+import gov.ca.cwds.idm.persistence.model.OperationType;
 import gov.ca.cwds.idm.service.cognito.dto.CognitoUserPage;
 import gov.ca.cwds.idm.service.cognito.dto.CognitoUsersSearchCriteria;
 import gov.ca.cwds.idm.service.cognito.util.CognitoUtils;
@@ -154,7 +158,7 @@ public class CognitoServiceFacade {
     AdminGetUserRequest request = createAdminGetUserRequest(id);
     AdminGetUserResult agur;
 
-    agur = executeInCognito(identityProvider::adminGetUser, request, id);
+    agur = executeInCognito(identityProvider::adminGetUser, request, id, GET);
 
     return new UserType()
         .withUsername(agur.getUsername())
@@ -186,7 +190,8 @@ public class CognitoServiceFacade {
               .withUserPoolId(properties.getUserpool())
               .withUserAttributes(updateAttributes);
 
-      executeInCognito(identityProvider::adminUpdateUserAttributes, adminUpdateUserAttributesRequest, id);
+      executeInCognito(
+          identityProvider::adminUpdateUserAttributes, adminUpdateUserAttributesRequest, id, UPDATE);
       executed = true;
     }
     return executed;
@@ -218,7 +223,7 @@ public class CognitoServiceFacade {
         AdminEnableUserRequest adminEnableUserRequest =
             new AdminEnableUserRequest().withUsername(id).withUserPoolId(properties.getUserpool());
 
-        executeInCognito(identityProvider::adminEnableUser, adminEnableUserRequest, id);
+        executeInCognito(identityProvider::adminEnableUser, adminEnableUserRequest, id, UPDATE);
         executed =  true;
       } else {
         AdminDisableUserRequest adminDisableUserRequest =
@@ -260,7 +265,7 @@ public class CognitoServiceFacade {
   }
 
   private <T extends AmazonWebServiceRequest, R extends AmazonWebServiceResult>
-    R executeInCognito(Function<T, R> function, T request, String userId) {
+    R executeInCognito(Function<T, R> function, T request, String userId, OperationType operation) {
 
     try {
       return function.apply(request);
@@ -270,7 +275,12 @@ public class CognitoServiceFacade {
       throw new UserNotFoundPerryException(msg, e);
 
     } catch (Exception e) {
-      String msg = messages.get(ERROR_UPDATE_USER_IN_IDM);
+      String msg = "";
+      if(operation == UPDATE) {
+        msg = messages.get(ERROR_UPDATE_USER_IN_IDM);
+      } else if(operation == GET) {
+        msg = messages.get(ERROR_GET_USER_FROM_IDM);
+      }
       LOGGER.error(msg, e);
       throw new PerryException(msg, e);
     }
