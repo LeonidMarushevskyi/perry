@@ -73,7 +73,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
@@ -116,6 +115,7 @@ public class IdmResourceTest extends BaseLiquibaseTest {
   private static final String USER_WITH_RACFID_ID = "24051d54-9321-4dd2-a92f-6425d6c455be";
   private static final String USER_WITH_RACFID_AND_DB_DATA_ID =
       "d740ec1d-80ae-4d84-a8c4-9bed7a942f5b";
+  private static final String USER_WITH_NO_PHONE_EXTENSION = "d740ec1d-66ae-4d84-a8c4-8bed7a942f5b";
   private static final String NEW_USER_SUCCESS_ID = "17067e4e-270f-4623-b86c-b4d4fa527a34";
   private static final String ABSENT_USER_ID = "absentUserId";
   private static final String ERROR_USER_ID = "errorUserId";
@@ -145,8 +145,6 @@ public class IdmResourceTest extends BaseLiquibaseTest {
   @Autowired  private IdmServiceImpl idmService;
 
   @Autowired private UserLogRepository userLogRepository;
-
-  @Autowired  private UserLogService userLogService;
 
   private SearchService searchService = mock(SearchService.class);
 
@@ -231,6 +229,14 @@ public class IdmResourceTest extends BaseLiquibaseTest {
     testGetValidYoloUser(
         USER_WITH_RACFID_AND_DB_DATA_ID,
         "fixtures/idm/get-user/with-racfid-and-db-data-valid.json");
+  }
+
+  @Test
+  @WithMockCustomUser
+  public void testGetUserWithNoPhoneExtension() throws Exception {
+    testGetValidYoloUser(
+        USER_WITH_NO_PHONE_EXTENSION,
+        "fixtures/idm/get-user/with-racfid-and-no-phone-extension.json");
   }
 
   @Test
@@ -359,9 +365,6 @@ public class IdmResourceTest extends BaseLiquibaseTest {
     AdminCreateUserRequest request = cognitoServiceFacade.createAdminCreateUserRequest(user);
     setCreateUserResult(request, NEW_USER_SUCCESS_ID);
 
-    AdminGetUserRequest getUserRequest =
-        cognitoServiceFacade.createAdminGetUserRequest(NEW_USER_SUCCESS_ID);
-
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/idm/users")
@@ -371,7 +374,6 @@ public class IdmResourceTest extends BaseLiquibaseTest {
         .andExpect(header().string("location", "http://localhost/idm/users/" + NEW_USER_SUCCESS_ID))
         .andReturn();
 
-    verify(cognito, times(1)).adminGetUser(getUserRequest);
     verify(cognito, times(1)).adminCreateUser(request);
     verify(searchService, times(1)).createUser(any(User.class));
   }
@@ -391,19 +393,19 @@ public class IdmResourceTest extends BaseLiquibaseTest {
     AdminCreateUserRequest request = cognitoServiceFacade.createAdminCreateUserRequest(user);
     setCreateUserResult(request, NEW_USER_ES_FAIL_ID);
 
-    AdminGetUserRequest getUserRequest =
-        cognitoServiceFacade.createAdminGetUserRequest(NEW_USER_ES_FAIL_ID);
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.post("/idm/users")
+                    .contentType(JSON_CONTENT_TYPE)
+                    .content(asJsonString(user)))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andExpect(
+                header().string("location", "http://localhost/idm/users/" + NEW_USER_ES_FAIL_ID))
+            .andReturn();
 
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/idm/users")
-                .contentType(JSON_CONTENT_TYPE)
-                .content(asJsonString(user)))
-        .andExpect(MockMvcResultMatchers.status().isCreated())
-        .andExpect(header().string("location", "http://localhost/idm/users/" + NEW_USER_ES_FAIL_ID))
-        .andReturn();
+    assertExtensible(result, "fixtures/idm/partial-success-user-create/log-success.json");
 
-    verify(cognito, times(1)).adminGetUser(getUserRequest);
     verify(cognito, times(1)).adminCreateUser(request);
     verify(searchService, times(1)).createUser(any(User.class));
 
@@ -1001,6 +1003,21 @@ public class IdmResourceTest extends BaseLiquibaseTest {
               null,
               "SMITHBO");
 
+      TestUser userWithNoPhoneExtension =
+          testUser(
+              USER_WITH_NO_PHONE_EXTENSION,
+              Boolean.TRUE,
+              "CONFIRMED",
+              date(2018, 5, 3),
+              date(2018, 5, 31),
+              "gabriel@gmail.com",
+              "Gabriel",
+              "Huanito",
+              WithMockCustomUser.COUNTY,
+              "test",
+              null,
+              "SMITHB2");
+
       TestUser newSuccessUser =
           testUser(
               NEW_USER_SUCCESS_ID,
@@ -1044,6 +1061,8 @@ public class IdmResourceTest extends BaseLiquibaseTest {
       setSearchByRacfidRequestAndResult(userWithRacfid);
 
       setSearchByRacfidRequestAndResult(userWithRacfidAndDbData);
+
+      setSearchByRacfidRequestAndResult(userWithNoPhoneExtension);
     }
 
     private void setListUsersRequestAndResult(String paginationToken, TestUser... testUsers) {

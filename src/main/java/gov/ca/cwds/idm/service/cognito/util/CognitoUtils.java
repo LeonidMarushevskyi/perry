@@ -7,6 +7,7 @@ import static gov.ca.cwds.idm.service.cognito.CustomUserAttribute.RACFID_CUSTOM;
 import static gov.ca.cwds.idm.service.cognito.CustomUserAttribute.RACFID_CUSTOM_2;
 import static gov.ca.cwds.idm.service.cognito.CustomUserAttribute.ROLES;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.EMAIL;
+import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.EMAIL_VERIFIED;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.FIRST_NAME;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.LAST_NAME;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.PHONE_NUMBER;
@@ -29,6 +30,7 @@ public class CognitoUtils {
 
   public static final String EMAIL_DELIVERY = "EMAIL";
   private static final String COGNITO_LIST_DELIMITER = ":";
+  private static final String TRUE_VALUE = "True";
 
   private CognitoUtils() {}
 
@@ -109,6 +111,7 @@ public class CognitoUtils {
             .addAttribute(RACFID_CUSTOM, racfid)
             .addAttribute(RACFID_CUSTOM_2, racfid)
             .addAttribute(RACFID_STANDARD, racfid)
+            .addAttribute(EMAIL_VERIFIED, TRUE_VALUE)
             .addAttribute(createPermissionsAttribute(user.getPermissions()))
             .addAttribute(createRolesAttribute(user.getRoles()));
     return attributesBuilder.build();

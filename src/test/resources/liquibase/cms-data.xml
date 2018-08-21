@@ -67,4 +67,68 @@
     </insert>
 
   </changeSet>
+  <changeSet id="data_for_cms_db_2" author="Dmytro.Sorych">
+    <insert tableName="CWS_OFFT">
+      <column name="IDENTIFIER" value="JzoGSkE06I"/>
+      <column name="FAX_NO" valueNumeric="6464887897"/>
+      <column name="GEO_RGNTCD" value="WE"/>
+      <column name="GVR_ENTC" valueNumeric="1124"/>
+      <column name="HDQRTR_IND" value="N"/>
+      <column name="INACTV_IND" value="N"/>
+      <column name="MAILST_DSC" value="       "/>
+      <column name="MSG_TEL_NO" valueNumeric="9799799799"/>
+      <column name="MSG_EXT_NO" valueNumeric="8"/>
+      <column name="CWS_OFF_NO" value="6464 "/>
+      <column name="PRM_TEL_NO" valueNumeric="4646464646"/>
+      <column name="PRM_EXT_NO" valueNumeric="0"/>
+      <column name="LST_UPD_ID" value="0V2"/>
+      <column name="LST_UPD_TS" valueDate="2004-09-21 16:02:00.258906"/>
+      <column name="FKSTFPERST"/>
+      <column name="COMNT_DSC" value="                                                                                                                        "/>
+      <column name="AGENCY_NM" value="Yolo Agency                                  "/>
+      <column name="DPT_DIV_NM" value="Yolo Department                              "/>
+      <column name="CWS_OFF_NM" value="Tolo Office                                  "/>
+      <column name="CNTY_SPFCD" value="57"/>
+      <column name="AGCY_CD_NO" valueNumeric="0"/>
+      <column name="LOC_CNTY" valueNumeric="0"/>
+      <column name="DIR_NM_TL" value="d                                            "/>
+    </insert>
+
+    <insert tableName="STFPERST">
+      <column name="IDENTIFIER" value="07M"/>
+      <column name="END_DT"/>
+      <column name="FIRST_NM" value="Win                 "/>
+      <column name="JOB_TL_DSC" value="Win JobTitle                  "/>
+      <column name="LAST_NM" value="Staff                    "/>
+      <column name="MID_INI_NM" value=" "/>
+      <column name="NMPRFX_DSC" value="Win   "/>
+      <column name="PHONE_NO" valueNumeric="4646888777"/>
+      <column name="TEL_EXT_NO" valueNumeric="7"/>
+      <column name="START_DT" valueDate="1980-08-08"/>
+      <column name="SUFX_TLDSC" value="    "/>
+      <column name="TLCMTR_IND" value="Y"/>
+      <column name="LST_UPD_ID" value="00E"/>
+      <column name="LST_UPD_TS" valueDate="2004-01-06 12:47:12.570402"/>
+      <column name="FKCWS_OFFT" value="JzoGSkE06I"/>
+      <column name="AVLOC_DSC" value="Availability / Location Description                                                                                                                             "/>
+      <column name="SSRS_WKRID" value="1594"/>
+      <column name="CNTY_SPFCD" value="57"/>
+      <column name="DTYWKR_IND" value="N"/>
+      <column name="FKCWSADDRT" value="QW16FeOq38"/>
+      <column name="EMAIL_ADDR"/>
+    </insert>
+
+    <insert tableName="USERID_T">
+      <column name="IDENTIFIER" value="AakC6Jm06I"/>
+      <column name="LOGON_ID" value="SMITHB2"/>
+      <column name="END_DT"/>
+      <column name="END_TM"/>
+      <column name="LST_UPD_ID" value="q54"/>
+      <column name="LST_UPD_TS" valueDate="2009-05-18 17:10:43.010371"/>
+      <column name="FKFPSTFPRT"/>
+      <column name="FKSTFPERST" value="07M"/>
+      <column name="SYS_DMC" valueNumeric="5394"/>
+    </insert>
+
+  </changeSet>
 </databaseChangeLog>

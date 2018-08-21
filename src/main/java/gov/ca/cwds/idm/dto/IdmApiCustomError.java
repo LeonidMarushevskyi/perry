@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import gov.ca.cwds.service.messages.MessageCode;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -30,7 +32,7 @@ public class IdmApiCustomError  implements Serializable {
   private String errorCode;
 
   @JsonProperty
-  private String cause;
+  private List<String> causes = new ArrayList<>();
 
   private IdmApiCustomError() {
     timestamp = LocalDateTime.now();
@@ -51,9 +53,9 @@ public class IdmApiCustomError  implements Serializable {
     this.errorCode = errorCode.getValue();
   }
 
-  public IdmApiCustomError(HttpStatus status, MessageCode errorCode, String message, String cause) {
+  public IdmApiCustomError(HttpStatus status, MessageCode errorCode, String message, List<String> causes) {
     this(status, errorCode, message);
-    this.cause = cause;
+    this.causes = causes;
   }
 
   public LocalDateTime getTimestamp() {
@@ -72,7 +74,7 @@ public class IdmApiCustomError  implements Serializable {
     return errorCode;
   }
 
-  public String getCause() {
-    return cause;
+  public List<String> getCauses() {
+    return causes;
   }
 }

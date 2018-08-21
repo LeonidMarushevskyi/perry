@@ -2,8 +2,9 @@ package gov.ca.cwds.idm;
 
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.RACFID_STANDARD;
 import static gov.ca.cwds.service.messages.MessageCode.IDM_USER_VALIDATION_FAILED;
-import static gov.ca.cwds.service.messages.MessageCode.INVALIDE_DATE_FORMAT;
+import static gov.ca.cwds.service.messages.MessageCode.INVALID_DATE_FORMAT;
 import static gov.ca.cwds.service.messages.MessageCode.USER_WITH_EMAIL_EXISTS_IN_IDM;
+import static java.util.stream.Collectors.toList;
 
 import gov.ca.cwds.idm.dto.IdmApiCustomError;
 import gov.ca.cwds.idm.dto.User;
@@ -15,6 +16,7 @@ import gov.ca.cwds.idm.dto.UsersSearchCriteria;
 import gov.ca.cwds.idm.persistence.model.Permission;
 import gov.ca.cwds.idm.service.DictionaryProvider;
 import gov.ca.cwds.idm.service.IdmService;
+import gov.ca.cwds.rest.api.domain.PartialSuccessException;
 import gov.ca.cwds.rest.api.domain.UserAlreadyExistsException;
 import gov.ca.cwds.rest.api.domain.UserIdmValidationException;
 import gov.ca.cwds.rest.api.domain.UserNotFoundPerryException;
@@ -27,6 +29,7 @@ import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -36,9 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -128,9 +133,9 @@ public class IdmResource {
     try {
       lastJobTime = new SimpleDateFormat(DATETIME_FORMAT_PATTERN).parse(lastJobDateStr);
     } catch (ParseException e) {
-      String msg = messages.get(INVALIDE_DATE_FORMAT, DATETIME_FORMAT_PATTERN);
+      String msg = messages.get(INVALID_DATE_FORMAT, DATETIME_FORMAT_PATTERN);
       LOGGER.error(msg, e);
-      return createCustomResponseEntity(HttpStatus.BAD_REQUEST, INVALIDE_DATE_FORMAT, msg);
+      return createCustomResponseEntity(HttpStatus.BAD_REQUEST, INVALID_DATE_FORMAT, msg);
     }
     return ResponseEntity.ok().body(idmService.getFailedOperations(lastJobTime));
   }
@@ -215,20 +220,39 @@ public class IdmResource {
           User user) {
     try {
       String newUserId = idmService.createUser(user);
-      URI uri =
-          ServletUriComponentsBuilder.fromCurrentRequest()
-              .path("/{id}")
-              .buildAndExpand(newUserId)
-              .toUri();
-      return ResponseEntity.created(uri).build();
+      URI locationUri = getNewUserLocationUri(newUserId);
+      return ResponseEntity.created(locationUri).build();
 
     } catch (UserAlreadyExistsException e) {
       return createCustomResponseEntity(
           HttpStatus.CONFLICT, USER_WITH_EMAIL_EXISTS_IN_IDM, e.getMessage());
+
     } catch (UserIdmValidationException e) {
       return createCustomResponseEntity(
-          HttpStatus.BAD_REQUEST, IDM_USER_VALIDATION_FAILED, e.getMessage(), e.getCause().getMessage());
+          HttpStatus.BAD_REQUEST,
+          IDM_USER_VALIDATION_FAILED,
+          e.getMessage(),
+          Collections.singletonList(e.getCause().getMessage()));
+
+    } catch (PartialSuccessException e) {
+      URI locationUri = getNewUserLocationUri(e.getUserId());
+      HttpHeaders headers = new HttpHeaders();
+      headers.setLocation(locationUri);
+
+      return createCustomResponseEntity(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          e.getErrorCode(),
+          e.getMessage(),
+          headers,
+          e.getCauses().stream().map(Exception::getMessage).collect(toList()));
     }
+  }
+
+  private URI getNewUserLocationUri(String newUserId){
+    return  ServletUriComponentsBuilder.fromCurrentRequest()
+        .path("/{id}")
+        .buildAndExpand(newUserId)
+        .toUri();
   }
 
   @RequestMapping(method = RequestMethod.GET, value = "/permissions", produces = "application/json")
@@ -263,14 +287,20 @@ public class IdmResource {
   }
 
   private static ResponseEntity<IdmApiCustomError> createCustomResponseEntity(
-      HttpStatus httpStatus, MessageCode errorCode, String msg, String cause) {
-    return new ResponseEntity<>(
-        new IdmApiCustomError(httpStatus, errorCode, msg, cause), httpStatus);
-  }
-
-  private static ResponseEntity<IdmApiCustomError> createCustomResponseEntity(
       HttpStatus httpStatus, MessageCode errorCode, String msg) {
     return new ResponseEntity<>(
         new IdmApiCustomError(httpStatus, errorCode, msg), httpStatus);
+  }
+
+  private static ResponseEntity<IdmApiCustomError> createCustomResponseEntity(
+      HttpStatus httpStatus, MessageCode errorCode, String msg, List<String> causes) {
+    return new ResponseEntity<>(
+        new IdmApiCustomError(httpStatus, errorCode, msg, causes), httpStatus);
+  }
+
+  private static ResponseEntity<IdmApiCustomError> createCustomResponseEntity(
+      HttpStatus httpStatus, MessageCode errorCode, String msg, MultiValueMap<String, String> headers, List<String> causes) {
+    return new ResponseEntity<>(
+        new IdmApiCustomError(httpStatus, errorCode, msg, causes), headers, httpStatus);
   }
 }

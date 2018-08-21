@@ -84,13 +84,13 @@ public class CognitoServiceFacade {
             .build();
   }
 
-  public String createUser(User user) {
+  public UserType createUser(User user) {
 
     AdminCreateUserRequest request = createAdminCreateUserRequest(user);
 
     try {
       AdminCreateUserResult result = identityProvider.adminCreateUser(request);
-      return result.getUser().getUsername();
+      return result.getUser();
 
     } catch (UsernameExistsException e) {
       String causeMsg = messages.get(USER_WITH_EMAIL_EXISTS_IN_IDM, user.getEmail());

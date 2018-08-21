@@ -2,13 +2,14 @@ package gov.ca.cwds.data.persistence.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import gov.ca.cwds.data.converter.StringToRequiredIntegerConverter;
 import gov.ca.cwds.data.persistence.cms.CmsPersistentObject;
 import io.dropwizard.jackson.JsonSnakeCase;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
-import java.util.Objects;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -83,10 +84,10 @@ public class CwsOffice extends CmsPersistentObject {
   @JsonIgnore
   private Long primaryPhoneNumber;
 
-  @Type(type = "integer")
   @Column(name = "PRM_EXT_NO")
   @JsonIgnore
-  private Integer primaryPhoneExtensionNumber;
+  @Convert(converter = StringToRequiredIntegerConverter.class)
+  private String primaryPhoneExtensionNumber;
 
   @Column(name = "FKSTFPERST")
   @JsonIgnore
@@ -160,7 +161,7 @@ public class CwsOffice extends CmsPersistentObject {
       Short governmentEntityType, String headquarterIndicator, String inactiveIndicator,
       String mailStopDescription, Long messagePhoneNumber,
       Integer messagePhoneExtensionNumber, String cwsOffNumber, Long primaryPhoneNumber,
-      Integer primaryPhoneExtensionNumber, String staffPersonId, String commentDescription,
+      String primaryPhoneExtensionNumber, String staffPersonId, String commentDescription,
       String agencyName, String departmentDivisionName, String cwsOfficeName,
       String countySpecificCode, Short agencyCodeNumber, Short locationCountyType,
       String directorsNameTitle) {
@@ -274,7 +275,7 @@ public class CwsOffice extends CmsPersistentObject {
   /**
    * @return the primaryPhoneExtensionNumber
    */
-  public Integer getPrimaryPhoneExtensionNumber() {
+  public String getPrimaryPhoneExtensionNumber() {
     return primaryPhoneExtensionNumber;
   }
 

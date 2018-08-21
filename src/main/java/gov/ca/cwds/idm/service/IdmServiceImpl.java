@@ -2,6 +2,8 @@ package gov.ca.cwds.idm.service;
 
 import static gov.ca.cwds.idm.persistence.model.OperationType.CREATE;
 import static gov.ca.cwds.idm.persistence.model.OperationType.UPDATE;
+import static gov.ca.cwds.idm.service.OperationResultType.FAIL;
+import static gov.ca.cwds.idm.service.OperationResultType.SUCCESS;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.EMAIL;
 import static gov.ca.cwds.idm.service.cognito.StandardUserAttribute.RACFID_STANDARD;
 import static gov.ca.cwds.idm.service.cognito.util.CognitoUsersSearchCriteriaUtil.composeToGetFirstPageByEmail;
@@ -12,6 +14,8 @@ import static gov.ca.cwds.service.messages.MessageCode.NOT_AUTHORIZED_TO_ADD_USE
 import static gov.ca.cwds.service.messages.MessageCode.NO_USER_WITH_RACFID_IN_CWSCMS;
 import static gov.ca.cwds.service.messages.MessageCode.UNABLE_CREATE_IDM_USER_IN_ES;
 import static gov.ca.cwds.service.messages.MessageCode.UNABLE_UPDATE_IDM_USER_IN_ES;
+import static gov.ca.cwds.service.messages.MessageCode.USER_CREATE_SAVE_TO_SEARCH_AND_DB_LOG_ERRORS;
+import static gov.ca.cwds.service.messages.MessageCode.USER_CREATE_SAVE_TO_SEARCH_ERROR;
 import static gov.ca.cwds.service.messages.MessageCode.USER_WITH_EMAIL_EXISTS_IN_IDM;
 import static gov.ca.cwds.util.Utils.toLowerCase;
 import static gov.ca.cwds.util.Utils.toUpperCase;
@@ -34,6 +38,9 @@ import gov.ca.cwds.idm.service.cognito.StandardUserAttribute;
 import gov.ca.cwds.idm.service.cognito.dto.CognitoUserPage;
 import gov.ca.cwds.idm.service.cognito.dto.CognitoUsersSearchCriteria;
 import gov.ca.cwds.idm.service.cognito.util.CognitoUsersSearchCriteriaUtil;
+import gov.ca.cwds.idm.service.execution.PutInSearchExecution;
+import gov.ca.cwds.idm.service.execution.OptionalExecution;
+import gov.ca.cwds.rest.api.domain.PartialSuccessException;
 import gov.ca.cwds.rest.api.domain.PerryException;
 import gov.ca.cwds.rest.api.domain.auth.GovernmentEntityType;
 import gov.ca.cwds.service.CwsUserInfoService;
@@ -61,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -110,9 +118,28 @@ public class IdmServiceImpl implements IdmService {
 
   @Override
   public String createUser(User user) {
-    String id = cognitoServiceFacade.createUser(user);
-    createUserInSearch(id);
-    return id;
+    UserType userType = cognitoServiceFacade.createUser(user);
+    String userId = userType.getUsername();
+    PutInSearchExecution doraExecution = createUserInSearch(userType);
+
+    if (doraExecution.getResultType() == FAIL) {
+      OptionalExecution dbLogExecution = doraExecution.getUserLogExecution();
+
+      if (dbLogExecution.getResultType() == SUCCESS) {
+        String msg = messages.get(USER_CREATE_SAVE_TO_SEARCH_ERROR, userId);
+        throw new PartialSuccessException(
+            userId, msg, USER_CREATE_SAVE_TO_SEARCH_ERROR, doraExecution.getException());
+      } else {//logging in db failed
+        String msg = messages.get(USER_CREATE_SAVE_TO_SEARCH_AND_DB_LOG_ERRORS, userId);
+        throw new PartialSuccessException(
+            userId,
+            msg,
+            USER_CREATE_SAVE_TO_SEARCH_AND_DB_LOG_ERRORS,
+            doraExecution.getException(),
+            dbLogExecution.getException());
+      }
+    }
+    return userId;
   }
 
   @Override
@@ -236,15 +263,22 @@ public class IdmServiceImpl implements IdmService {
     }
   }
 
-  private void createUserInSearch(String id) {
-    try {
-      User createdUser = findUser(id);
-      searchService.createUser(createdUser);
-    } catch (Exception e) {
-      String msg = messages.get(UNABLE_CREATE_IDM_USER_IN_ES, id);
-      LOGGER.error(msg, e);
-      userLogService.logCreate(id);
-    }
+  private PutInSearchExecution createUserInSearch(UserType userType) {
+
+    return new PutInSearchExecution(userType){
+      @Override
+      protected ResponseEntity<String> tryMethod(UserType userType) {
+        User user = enrichCognitoUser(userType);
+        return searchService.createUser(user);
+      }
+
+      @Override
+      protected void catchMethod(Exception e) {
+        String msg = messages.get(UNABLE_CREATE_IDM_USER_IN_ES, userType.getUsername());
+        LOGGER.error(msg, e);
+        setUserLogExecution(userLogService.logCreate(userType.getUsername()));
+      }
+    };
   }
 
   private UserVerificationResult composeNegativeResultWithMessage(
@@ -280,7 +314,7 @@ public class IdmServiceImpl implements IdmService {
       Optional.ofNullable(office.getPrimaryPhoneNumber())
           .ifPresent(e -> user.setPhoneNumber(e.toString()));
       Optional.ofNullable(office.getPrimaryPhoneExtensionNumber())
-          .ifPresent(e -> user.setPhoneExtensionNumber(e.toString()));
+          .ifPresent(user::setPhoneExtensionNumber);
       Optional.ofNullable(office.getGovernmentEntityType())
           .ifPresent(
               x -> user.setCountyName((GovernmentEntityType.findBySysId(x)).getDescription()));
@@ -312,5 +346,22 @@ public class IdmServiceImpl implements IdmService {
 
   public void setSearchService(SearchService searchService) {
     this.searchService = searchService;
+  }
+
+  public void setCognitoServiceFacade(
+      CognitoServiceFacade cognitoServiceFacade) {
+    this.cognitoServiceFacade = cognitoServiceFacade;
+  }
+
+  public void setCwsUserInfoService(CwsUserInfoService cwsUserInfoService) {
+    this.cwsUserInfoService = cwsUserInfoService;
+  }
+
+  public void setUserLogService(UserLogService userLogService) {
+    this.userLogService = userLogService;
+  }
+
+  public void setMessages(MessagesService messages) {
+    this.messages = messages;
   }
 }

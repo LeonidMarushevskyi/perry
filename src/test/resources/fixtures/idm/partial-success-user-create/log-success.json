@@ -1,0 +1,8 @@
+{
+  "status": "INTERNAL_SERVER_ERROR",
+  "message": "Partial success of the \"User create\" operation: User with username: 08e14c57-6e5e-48dd-8172-e8949c2a7f76 was successfully created in Cognito but was not inserted into the search system. The operation was logged and the search index should be updated soon.",
+  "error_code": "CAP-018",
+  "causes": [
+    "Elastic Search error"
+  ]
+}

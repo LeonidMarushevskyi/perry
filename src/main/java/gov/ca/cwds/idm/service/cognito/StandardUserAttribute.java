@@ -5,7 +5,8 @@ public enum StandardUserAttribute implements UserAttribute {
   FIRST_NAME("given_name"),
   LAST_NAME("family_name"),
   PHONE_NUMBER("phone_number"),
-  RACFID_STANDARD("preferred_username");
+  RACFID_STANDARD("preferred_username"),
+  EMAIL_VERIFIED("email_verified");
 
   private String name;
 
