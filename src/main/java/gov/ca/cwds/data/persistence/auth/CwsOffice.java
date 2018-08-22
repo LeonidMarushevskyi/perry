@@ -1,22 +1,26 @@
 package gov.ca.cwds.data.persistence.auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import gov.ca.cwds.data.converter.StringToRequiredIntegerConverter;
-import gov.ca.cwds.data.persistence.cms.CmsPersistentObject;
-import io.dropwizard.jackson.JsonSnakeCase;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Type;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import gov.ca.cwds.data.converter.StringToRequiredIntegerConverter;
+import gov.ca.cwds.data.persistence.cms.CmsPersistentObject;
+import io.dropwizard.jackson.JsonSnakeCase;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 /**
  * {@link CmsPersistentObject} representing a CWS Office.
@@ -128,7 +132,9 @@ public class CwsOffice extends CmsPersistentObject {
   private String directorsNameTitle;
 
   /**
-   * Default constructor <p> Required for Hibernate
+   * Default constructor
+   * <p>
+   * Required for Hibernate
    */
   public CwsOffice() {
     super();
@@ -159,12 +165,11 @@ public class CwsOffice extends CmsPersistentObject {
    */
   public CwsOffice(String officeId, Long faxNumber, String geographicRegionTextCode,
       Short governmentEntityType, String headquarterIndicator, String inactiveIndicator,
-      String mailStopDescription, Long messagePhoneNumber,
-      Integer messagePhoneExtensionNumber, String cwsOffNumber, Long primaryPhoneNumber,
-      String primaryPhoneExtensionNumber, String staffPersonId, String commentDescription,
-      String agencyName, String departmentDivisionName, String cwsOfficeName,
-      String countySpecificCode, Short agencyCodeNumber, Short locationCountyType,
-      String directorsNameTitle) {
+      String mailStopDescription, Long messagePhoneNumber, Integer messagePhoneExtensionNumber,
+      String cwsOffNumber, Long primaryPhoneNumber, String primaryPhoneExtensionNumber,
+      String staffPersonId, String commentDescription, String agencyName,
+      String departmentDivisionName, String cwsOfficeName, String countySpecificCode,
+      Short agencyCodeNumber, Short locationCountyType, String directorsNameTitle) {
     super();
     this.officeId = officeId;
     this.faxNumber = faxNumber;
@@ -354,8 +359,7 @@ public class CwsOffice extends CmsPersistentObject {
 
     CwsOffice cwsOffice = (CwsOffice) o;
 
-    return new EqualsBuilder()
-        .append(officeId, cwsOffice.officeId)
+    return new EqualsBuilder().append(officeId, cwsOffice.officeId)
         .append(governmentEntityType, cwsOffice.governmentEntityType)
         .append(faxNumber, cwsOffice.faxNumber)
         .append(geographicRegionTextCode, cwsOffice.geographicRegionTextCode)
@@ -377,36 +381,20 @@ public class CwsOffice extends CmsPersistentObject {
         .append(locationCountyType, cwsOffice.locationCountyType)
         .append(directorsNameTitle, cwsOffice.directorsNameTitle)
         .append(getLastUpdatedId(), cwsOffice.getLastUpdatedId())
-        .append(getLastUpdatedTime(), cwsOffice.getLastUpdatedTime())
-        .isEquals();
+        .append(getLastUpdatedTime(), cwsOffice.getLastUpdatedTime()).isEquals();
   }
 
   @Override
   public final int hashCode() {
-    return new HashCodeBuilder(17, 37)
-        .append(officeId)
-        .append(governmentEntityType)
-        .append(faxNumber)
-        .append(geographicRegionTextCode)
-        .append(headquarterIndicator)
-        .append(inactiveIndicator)
-        .append(mailStopDescription)
-        .append(messagePhoneNumber)
-        .append(messagePhoneExtensionNumber)
-        .append(cwsOffNumber)
-        .append(primaryPhoneNumber)
-        .append(primaryPhoneExtensionNumber)
-        .append(staffPersonId)
-        .append(commentDescription)
-        .append(agencyName)
-        .append(departmentDivisionName)
-        .append(cwsOfficeName)
-        .append(countySpecificCode)
-        .append(agencyCodeNumber)
-        .append(locationCountyType)
-        .append(directorsNameTitle)
-        .append(getLastUpdatedId())
-        .append(getLastUpdatedTime())
+    return new HashCodeBuilder(17, 37).append(officeId).append(governmentEntityType)
+        .append(faxNumber).append(geographicRegionTextCode).append(headquarterIndicator)
+        .append(inactiveIndicator).append(mailStopDescription).append(messagePhoneNumber)
+        .append(messagePhoneExtensionNumber).append(cwsOffNumber).append(primaryPhoneNumber)
+        .append(primaryPhoneExtensionNumber).append(staffPersonId).append(commentDescription)
+        .append(agencyName).append(departmentDivisionName).append(cwsOfficeName)
+        .append(countySpecificCode).append(agencyCodeNumber).append(locationCountyType)
+        .append(directorsNameTitle).append(getLastUpdatedId()).append(getLastUpdatedTime())
         .toHashCode();
   }
+
 }
