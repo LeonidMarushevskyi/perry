@@ -1,0 +1,8 @@
+{
+  "status": "INTERNAL_SERVER_ERROR",
+  "message": "Partial success of the \"User update\" operation: User with username: d740ec1d-80ae-4d84-a8c4-9bed7a942f5b attributes were successfully updated in Cognito but enable status was not",
+  "error_code": "CAP-022",
+  "causes": [
+    "Exception while updating user in AWS Cognito: Update enable status error"
+  ]
+}

@@ -592,6 +592,46 @@ public class IdmResourceTest extends BaseLiquibaseTest {
 
   @Test
   @WithMockCustomUser
+  public void testPartiallySuccessfulUpdate() throws Exception {
+
+    int oldUserLogsSize = Iterables.size(userLogRepository.findAll());
+
+    UserUpdate userUpdate = new UserUpdate();
+    userUpdate.setEnabled(Boolean.FALSE);
+    userUpdate.setPermissions(toSet("RFA-rollout", "Hotline-rollout"));
+
+    AdminUpdateUserAttributesRequest updateAttributesRequest =
+        setUpdateUserAttributesRequestAndResult(
+            USER_WITH_RACFID_AND_DB_DATA_ID, attr(PERMISSIONS.getName(), "RFA-rollout:Hotline-rollout"));
+
+    AdminDisableUserRequest disableUserRequest = setDisableUserRequestAndFail(USER_WITH_RACFID_AND_DB_DATA_ID);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                MockMvcRequestBuilders.patch("/idm/users/" + USER_WITH_RACFID_AND_DB_DATA_ID)
+                    .contentType(JSON_CONTENT_TYPE)
+                    .content(asJsonString(userUpdate)))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andReturn();
+
+    assertExtensible(result, "fixtures/idm/partial-success-user-update/partial-update.json");
+
+    verify(cognito, times(1)).adminUpdateUserAttributes(updateAttributesRequest);
+    verify(cognito, times(1)).adminDisableUser(disableUserRequest);
+    verify(searchService, times(1)).updateUser(any(User.class));
+
+    InOrder inOrder = inOrder(cognito);
+    inOrder.verify(cognito).adminUpdateUserAttributes(updateAttributesRequest);
+    inOrder.verify(cognito).adminDisableUser(disableUserRequest);
+
+    Iterable<UserLog> userLogs = userLogRepository.findAll();
+    int newUserLogsSize = Iterables.size(userLogs);
+    assertTrue(newUserLogsSize == oldUserLogsSize);
+  }
+
+  @Test
+  @WithMockCustomUser
   public void testUpdateUserNoChanges() throws Exception {
 
     UserUpdate userUpdate = new UserUpdate();
@@ -878,6 +918,13 @@ public class IdmResourceTest extends BaseLiquibaseTest {
         new AdminDisableUserRequest().withUsername(id).withUserPoolId(USERPOOL);
     AdminDisableUserResult result = new AdminDisableUserResult();
     when(cognito.adminDisableUser(request)).thenReturn(result);
+    return request;
+  }
+
+  private AdminDisableUserRequest setDisableUserRequestAndFail(String id) {
+    AdminDisableUserRequest request =
+        new AdminDisableUserRequest().withUsername(id).withUserPoolId(USERPOOL);
+     when(cognito.adminDisableUser(request)).thenThrow(new RuntimeException("Update enable status error"));
     return request;
   }
 

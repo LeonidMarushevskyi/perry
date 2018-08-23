@@ -35,6 +35,7 @@ function validateLoginString() {
         + "\t\"staffId\": \"0X5\",\n"
         + "\t\"roles\": [\n"
         + "\t\t\"CWS-admin\",\n"
+        + "\t\t\"CANS-worker\",\n"
         + "\t\t\"Supervisor\"\n"
         + "\t],\n"
         + "\t\"county_code\": \"56\",\n"
@@ -49,6 +50,7 @@ function validateLoginString() {
         + "\t\t\"Hotline-rollout\",\n"
         + "\t\t\"Facility-search-rollout\",\n"
         + "\t\t\"RFA-rollout\",\n"
+        + "\t\t\"CANS-rollout\",\n"
         + "\t\t\"development-not-in-use\"\n"
         + "\t]\n"
         + "}";

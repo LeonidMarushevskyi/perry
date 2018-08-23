@@ -49,9 +49,6 @@ public class UserId extends CmsPersistentObject {
   @Column(name = "FKFPSTFPRT", length = CMS_ID_LEN)
   private String fkfpstfprt;
 
-  @Column(name = "FKSTFPERST", length = CMS_ID_LEN)
-  private String staffPersonId;
-
   @Id
   @Column(name = "IDENTIFIER", length = CMS_ID_LEN)
   private String id;
@@ -65,15 +62,11 @@ public class UserId extends CmsPersistentObject {
 
   @OneToMany
   @JoinColumn(name = "FKUSERID_T")
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @Fetch(FetchMode.JOIN)
   @Where(clause = "END_DT IS NULL")
   private Set<StaffAuthorityPrivilege> privileges;
 
   @ManyToOne
   @JoinColumn(name = "FKSTFPERST", insertable = false, updatable = false)
-  @LazyCollection(LazyCollectionOption.FALSE)
-  @Fetch(FetchMode.JOIN)
   private StaffPerson staffPerson;
 
   /**
@@ -89,18 +82,16 @@ public class UserId extends CmsPersistentObject {
    * @param endDate The endDate
    * @param endTime The endTime
    * @param fkfpstfprt The fkfpstfprt
-   * @param staffPersonId The staffPersonId
    * @param id The id
    * @param logonId The logonId
    * @param systemDomainType The system domain type
    */
-  public UserId(Date endDate, Date endTime, String fkfpstfprt, String staffPersonId, String id,
+  public UserId(Date endDate, Date endTime, String fkfpstfprt, String id,
       String logonId, Short systemDomainType) {
     super();
     this.endDate = endDate;
     this.endTime = endTime;
     this.fkfpstfprt = fkfpstfprt;
-    this.staffPersonId = staffPersonId;
     this.id = id;
     this.logonId = logonId;
     this.systemDomainType = systemDomainType;
@@ -154,12 +145,6 @@ public class UserId extends CmsPersistentObject {
     return StringUtils.trimToEmpty(fkfpstfprt);
   }
 
-  /**
-   * @return the staffPersonId
-   */
-  public String getStaffPersonId() {
-    return StringUtils.trimToEmpty(staffPersonId);
-  }
 
   /**
    * @return the id
@@ -199,7 +184,6 @@ public class UserId extends CmsPersistentObject {
         .append(endDate, userId.endDate)
         .append(endTime, userId.endTime)
         .append(fkfpstfprt, userId.fkfpstfprt)
-        .append(staffPersonId, userId.staffPersonId)
         .append(id, userId.id)
         .append(logonId, userId.logonId)
         .append(systemDomainType, userId.systemDomainType)
@@ -216,7 +200,6 @@ public class UserId extends CmsPersistentObject {
         .append(endDate)
         .append(endTime)
         .append(fkfpstfprt)
-        .append(staffPersonId)
         .append(id)
         .append(logonId)
         .append(systemDomainType)

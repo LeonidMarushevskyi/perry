@@ -1,6 +1,5 @@
 package gov.ca.cwds.data.persistence.auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.jackson.JsonSnakeCase;
 import io.swagger.annotations.ApiModel;
@@ -54,10 +53,6 @@ public class StaffPerson {
   @JsonProperty("last_name")
   private String lastName;
 
-  @Column(name = "FKCWS_OFFT")
-  @JsonIgnore
-  private String cwsOffice;
-
   @Column(name = "END_DT")
   @Type(type = "date")
   private Date endDate;
@@ -68,14 +63,10 @@ public class StaffPerson {
 
   @ManyToOne
   @JoinColumn(name = "FKCWS_OFFT", insertable = false, updatable = false)
-  @Fetch(FetchMode.JOIN)
-  @LazyCollection(LazyCollectionOption.FALSE)
   private CwsOffice office;
 
   @OneToMany
   @JoinColumn(name = "FKSTFPERST")
-  @Fetch(FetchMode.JOIN)
-  @LazyCollection(LazyCollectionOption.FALSE)
   @Where(clause = "END_DT IS NULL")
   private Set<StaffUnitAuthority> unitAuthorities;
 
@@ -110,14 +101,6 @@ public class StaffPerson {
 
   public void setCountyCode(String countyCode) {
     this.countyCode = countyCode;
-  }
-
-  public String getCwsOffice() {
-    return cwsOffice;
-  }
-
-  public void setCwsOffice(String cwsOffice) {
-    this.cwsOffice = cwsOffice;
   }
 
   public String getFirstName() {
@@ -169,7 +152,6 @@ public class StaffPerson {
         .append(countyCode, that.countyCode)
         .append(firstName, that.firstName)
         .append(lastName, that.lastName)
-        .append(cwsOffice, that.cwsOffice)
         .append(endDate, that.endDate)
         .append(startDate, that.startDate)
         .append(office, that.office)
@@ -184,7 +166,6 @@ public class StaffPerson {
         .append(countyCode)
         .append(firstName)
         .append(lastName)
-        .append(cwsOffice)
         .append(endDate)
         .append(startDate)
         .append(office)

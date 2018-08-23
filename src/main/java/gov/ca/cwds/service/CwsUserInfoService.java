@@ -1,7 +1,5 @@
 package gov.ca.cwds.service;
 
-import gov.ca.cwds.data.auth.CwsOfficeDao;
-import gov.ca.cwds.data.auth.StaffPersonDao;
 import gov.ca.cwds.data.auth.UserIdDao;
 import gov.ca.cwds.data.persistence.auth.CwsOffice;
 import gov.ca.cwds.data.persistence.auth.StaffPerson;
@@ -15,12 +13,10 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -39,10 +35,6 @@ public class CwsUserInfoService {
 
   @Autowired
   private UserIdDao userIdDao;
-  @Autowired
-  private CwsOfficeDao cwsOfficeDao;
-  @Autowired
-  private StaffPersonDao staffPersonDao;
 
   /**
    * {@inheritDoc}
@@ -66,13 +58,13 @@ public class CwsUserInfoService {
     Set<StaffUnitAuthority> setStaffUnitAuths = getStaffUnitAuthorities(user);
     StaffPerson staffPerson = user.getStaffPerson();
     if (staffPerson == null) {
-      LOGGER.warn("No staff person found for {}", user.getStaffPersonId());
+      LOGGER.warn("No staff person found for UserId {}", user.getLogonId());
       return null;
     }
 
     CwsOffice cwsOffice = staffPerson.getOffice();
     if (cwsOffice == null) {
-      LOGGER.warn("No cws office found for {}", staffPerson.getCwsOffice());
+      LOGGER.warn("No cws office for staffPerson {}", staffPerson.getId());
       return null;
     }
 
@@ -94,39 +86,26 @@ public class CwsUserInfoService {
   }
 
   public List<CwsUserInfo> findUsers(Collection<String> racfIds) {
-    List<String> filtered = racfIds.stream().filter(Objects::nonNull)
-        .filter(e -> e.length() <= RACFID_MAX_LENGTH).collect(Collectors.toList());
+    List<String> filtered =
+        racfIds
+            .stream()
+            .filter(Objects::nonNull)
+            .filter(e -> e.length() <= RACFID_MAX_LENGTH)
+            .collect(Collectors.toList());
     if (CollectionUtils.isEmpty(filtered)) {
       return Collections.emptyList();
     }
-    List<UserId> userIdList = userIdDao.findActiveByLogonIdIn(filtered);
-    List<String> staffPersonIds = userIdList.stream().map(UserId::getStaffPersonId)
-        .filter(Objects::nonNull).collect(Collectors.toList());
-
-    Map<String, StaffPerson> idToStaffperson =
-        StreamSupport.stream(staffPersonDao.findByIdIn(staffPersonIds).spliterator(), false)
-            .collect(Collectors.toMap(StaffPerson::getId, e -> e));
-
-    List<String> offices = idToStaffperson.values().stream().map(StaffPerson::getCwsOffice)
-        .filter(Objects::nonNull).collect(Collectors.toList());
-
-    Map<String, CwsOffice> idToOffice =
-        StreamSupport.stream(cwsOfficeDao.findByOfficeIdIn(offices).spliterator(), false)
-            .collect(Collectors.toMap(CwsOffice::getOfficeId, e -> e));
-
-    return userIdList.stream().map(e -> composeCwsUserInfo(e, idToStaffperson, idToOffice))
-        .collect(Collectors.toList());
+    Set<UserId> userIdList = userIdDao.findActiveByLogonIdIn(filtered);
+    return userIdList.stream().map(this::composeCwsUserInfo).collect(Collectors.toList());
   }
 
-  private CwsUserInfo composeCwsUserInfo(
-      UserId userId, Map<String, StaffPerson> idToStaffperson, Map<String, CwsOffice> idToOffice) {
-    StaffPerson staffPerson = idToStaffperson.get(userId.getStaffPersonId());
+  private CwsUserInfo composeCwsUserInfo(UserId userId) {
     CwsOffice office =
-        Optional.ofNullable(staffPerson).map(st -> idToOffice.get(st.getCwsOffice())).orElse(null);
+        Optional.ofNullable(userId.getStaffPerson()).map(StaffPerson::getOffice).orElse(null);
     return CwsUserInfo.CwsUserInfoBuilder.aCwsUserInfo()
         .withRacfId(userId.getLogonId())
         .withCwsOffice(office)
-        .withStaffPerson(staffPerson)
+        .withStaffPerson(userId.getStaffPerson())
         .build();
   }
 
@@ -194,11 +173,4 @@ public class CwsUserInfoService {
     this.userIdDao = userIdDao;
   }
 
-  public void setCwsOfficeDao(CwsOfficeDao cwsOfficeDao) {
-    this.cwsOfficeDao = cwsOfficeDao;
-  }
-
-  public void setStaffPersonDao(StaffPersonDao staffPersonDao) {
-    this.staffPersonDao = staffPersonDao;
-  }
 }
