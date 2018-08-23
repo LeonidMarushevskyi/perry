@@ -1,8 +1,7 @@
 package gov.ca.cwds;
 
-import gov.ca.cwds.idm.service.cognito.CognitoProperties;
-import gov.ca.cwds.idm.service.cognito.SearchProperties;
-import gov.ca.cwds.security.jwt.JwtService;
+import javax.persistence.EntityManagerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -19,16 +18,19 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 
-import javax.persistence.EntityManagerFactory;
+import gov.ca.cwds.idm.service.cognito.CognitoProperties;
+import gov.ca.cwds.idm.service.cognito.SearchProperties;
+import gov.ca.cwds.security.jwt.JwtService;
 
 @SpringBootApplication
 @EnableTransactionManagement(proxyTargetClass = true)
 @EnableAutoConfiguration(exclude = {FlywayAutoConfiguration.class, SessionAutoConfiguration.class,
     LiquibaseAutoConfiguration.class})
 @ComponentScan("gov.ca.cwds")
-@EnableGlobalMethodSecurity(prePostEnabled=true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @EntityScan("gov.ca.cwds.data.persistence.auth")
-@EnableConfigurationProperties({PerryProperties.class, CognitoProperties.class, SearchProperties.class})
+@EnableConfigurationProperties({PerryProperties.class, CognitoProperties.class,
+    SearchProperties.class})
 public class PerryApplication {
 
   @Bean
@@ -39,7 +41,7 @@ public class PerryApplication {
   @Bean
   @Autowired
   public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
-    JpaTransactionManager txManager = new JpaTransactionManager();
+    final JpaTransactionManager txManager = new JpaTransactionManager();
     txManager.setEntityManagerFactory(entityManagerFactory);
     return txManager;
   }
@@ -53,4 +55,5 @@ public class PerryApplication {
   public static void main(String[] args) {
     SpringApplication.run(PerryApplication.class, args);
   }
+
 }

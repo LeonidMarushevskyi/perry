@@ -39,7 +39,7 @@ project.ext {
     cwdsModelVersion = '0.8.4_650-RC'
     powerMockVersion = "1.7.3"
 
-    // assume that Windows users use the Docker Toolbox
+    // Assume that Windows users use the Docker Toolbox.
     buildEnv = 'JENKINS'
     devDockerHost = 'localhost'
     devDockerPort = 2376
@@ -53,7 +53,7 @@ project.ext {
     projectVersion = (isRelease ? projectReleaseVersion : projectSnapshotVersion )
     dockerTag = projectVersion
 
-    // Publishing configuration
+    // Publishing configuration:
     snapshotMavenRepo = "http://pr.dev.cwds.io/artifactory/repo"
     releaseMavenRepo = "http://pr.dev.cwds.io/artifactory/libs-release"
     artifactoryRepo = (isRelease ? releaseMavenRepo : snapshotMavenRepo)
@@ -66,7 +66,6 @@ project.ext {
     commonsLangVersion = '3.6'
     commonsIoVersion = '2.5'
     serenityVersion = '1.9.13'
-
 }
 group = projectGroup
 
@@ -92,7 +91,8 @@ sonarqube {
     properties {
         property "sonar.jacoco.reportPath", "${buildDir}/jacoco/test.exec"
         property "sonar.jacoco.itReportPath", "${buildDir}/jacoco/integrationTest.exec"
-        //sonar doesn't recognize AOP and shiro library!!!
+        
+        // SonarQube doesn't recognize AOP and shiro library!!! Bad, bad SonarQube! 
         property "sonar.exclusions", "/src/main/java/gov/ca/cwds/security/**"
     }
 }
@@ -137,7 +137,6 @@ dependencies {
 
     compile group: 'org.springframework.security.oauth', name: 'spring-security-oauth2', version:'2.0.13.RELEASE'
     compile group: 'org.springframework.session', name: 'spring-session', version:'1.3.1.RELEASE'
-    // https://mvnrepository.com/artifact/org.springframework.retry/spring-retry
     compile group: 'org.springframework.retry', name: 'spring-retry', version: '1.2.2.RELEASE'
 
     compile group: 'org.webjars', name: 'angularjs', version:'1.4.3'
@@ -177,7 +176,6 @@ dependencies {
         exclude group: 'junit', module: 'junit'
     }
 
-    // https://mvnrepository.com/artifact/nl.jqno.equalsverifier/equalsverifier
     testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.1.6'
     testCompile 'org.ow2.asm:asm-all:5.1'
     testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.0.5'
