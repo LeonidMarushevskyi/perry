@@ -1,4 +1,4 @@
-FROM cwds/javajdk:8u161
+FROM cwds/javajdk
 RUN mkdir /opt/cwds-perry
 RUN mkdir /opt/cwds-perry/logs
 ADD config/* /opt/cwds-perry/config/
