@@ -85,13 +85,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
   private boolean wasRolesActuallyEdited(User user, UserUpdate updateUserDto) {
     return wasActuallyEdited(
         user.getRoles(),
-        updateUserDto.getRoles());
+        updateUserDto.getRoles().get());
   }
 
   private boolean wasPermissionsActuallyEdited(User user, UserUpdate updateUserDto) {
     return wasActuallyEdited(
         user.getPermissions(),
-        updateUserDto.getPermissions());
+        updateUserDto.getPermissions().get());
   }
 
   private boolean wasActuallyEdited(Set<String> oldSet, Set<String> newSet) {

@@ -1,10 +1,10 @@
 package gov.ca.cwds.idm.service.diff;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
+import gov.ca.cwds.idm.dto.UserUpdate.UpdateProperty;
 import gov.ca.cwds.util.Utils;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -23,43 +23,44 @@ public class UpdateDifference {
   private final StringSetDiff rolesDiff;
 
   public UpdateDifference(final User existedUser, final UserUpdate userUpdate) {
-    emailDiff = createStringDiff(userUpdate.isEmailUpdateRequested(),
-        existedUser.getEmail(), Utils.toLowerCase(userUpdate.getEmail()));
 
-    enabledDiff = createBooleanDiff(userUpdate.isEnabledUpdateRequested(),
-        existedUser.getEnabled(), userUpdate.getEnabled());
+    emailDiff = createEmailDiff(existedUser.getEmail(), userUpdate.getEmail());
 
-    phoneNumberDiff = createStringDiff(userUpdate.isPhoneNumberUpdateRequested(),
-        existedUser.getPhoneNumber(), userUpdate.getPhoneNumber());
+    enabledDiff = createBooleanDiff(existedUser.getEnabled(), userUpdate.getEnabled());
 
-    phoneExtensionNumberDiff = createStringDiff(userUpdate.isPhoneNumberUpdateRequested(),
-            existedUser.getPhoneExtensionNumber(), userUpdate.getPhoneExtensionNumber());
+    phoneNumberDiff = createStringDiff(existedUser.getPhoneNumber(), userUpdate.getPhoneNumber());
 
-    cellPhoneNumberDiff = createStringDiff(userUpdate.isCellPhoneNumberUpdateRequested(),
+    phoneExtensionNumberDiff = createStringDiff(
+        existedUser.getPhoneExtensionNumber(), userUpdate.getPhoneExtensionNumber());
+
+    cellPhoneNumberDiff = createStringDiff(
         existedUser.getCellPhoneNumber(), userUpdate.getCellPhoneNumber());
 
-    notesDiff = createStringDiff(userUpdate.isNotesUpdateRequested(),
-        existedUser.getNotes(), userUpdate.getNotes());
+    notesDiff = createStringDiff(existedUser.getNotes(), userUpdate.getNotes());
 
-    permissionsDiff = createStringSetDiff(userUpdate.isPermissionsUpdateRequested(),
+    permissionsDiff = createStringSetDiff(
         existedUser.getPermissions(), userUpdate.getPermissions());
 
-    rolesDiff = createStringSetDiff(userUpdate.isRolesUpdateRequested(),
-        existedUser.getRoles(), userUpdate.getRoles());
+    rolesDiff = createStringSetDiff(existedUser.getRoles(), userUpdate.getRoles());
   }
 
-  private StringDiff createStringDiff(boolean updateRequested, String oldValue, String newValue) {
-    return createDiff(updateRequested, oldValue, newValue, this::blankToNull, StringDiff::new);
+  private StringDiff createStringDiff(String oldValue, UpdateProperty<String> newValue) {
+    return createDiff(newValue.isSet(), oldValue, newValue.get(), Utils::blankToNull, StringDiff::new);
   }
 
-  private BooleanDiff createBooleanDiff(boolean updateRequested,
-      Boolean oldValue, Boolean newValue) {
-    return createDiff(updateRequested, oldValue, newValue, BooleanDiff::new);
+  private StringDiff createEmailDiff(String oldValue, UpdateProperty<String> newValue) {
+    return createDiff(newValue.isSet(), oldValue, newValue.get(),
+        e -> Utils.toLowerCase(Utils.blankToNull(e)), StringDiff::new);
   }
 
-  private StringSetDiff createStringSetDiff(boolean updateRequested,
-      Set<String> oldValue, Set<String> newValue) {
-    return createDiff(updateRequested, oldValue, newValue, StringSetDiff::new);
+  private BooleanDiff createBooleanDiff(Boolean oldValue, UpdateProperty<Boolean> newValue) {
+    return createDiff(newValue.isSet(), oldValue, newValue.get(), BooleanDiff::new);
+  }
+
+  private StringSetDiff createStringSetDiff(
+      Set<String> oldValue, UpdateProperty<Set<String>> newValue) {
+    return createDiff(newValue.isSet(), oldValue, newValue.get(), this::nullToEmptySet,
+        StringSetDiff::new);
   }
 
   private <T, R> R createDiff(boolean updateRequested, T oldValue, T newValue,
@@ -115,7 +116,7 @@ public class UpdateDifference {
     return Optional.ofNullable(rolesDiff);
   }
 
-  private String blankToNull(String str) {
-    return isBlank(str) ? null : str;
+  private <T> Set<T> nullToEmptySet(Set<T> input) {
+    return input == null ? new LinkedHashSet<>() : input;
   }
 }

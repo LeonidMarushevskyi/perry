@@ -1,6 +1,5 @@
 package gov.ca.cwds.idm.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -11,141 +10,114 @@ import java.util.Set;
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class UserUpdate implements Serializable {
 
-  private static final long serialVersionUID = -5847105938540972160L;
+  private static final long serialVersionUID = 9182424503106881350L;
 
-  private String email;
-  @JsonIgnore
-  private boolean emailUpdateRequested;
+  private UpdateProperty<String> email = UpdateProperty.empty();
 
-  private Boolean enabled;
-  @JsonIgnore
-  private boolean enabledUpdateRequested;
+  private UpdateProperty<Boolean> enabled = UpdateProperty.empty();
 
-  private String phoneNumber;
-  @JsonIgnore
-  private boolean phoneNumberUpdateRequested;
+  private UpdateProperty<String> phoneNumber = UpdateProperty.empty();
 
-  private String phoneExtensionNumber;
-  @JsonIgnore
-  private boolean phoneExtensionNumberUpdateRequested;
+  private UpdateProperty<String> phoneExtensionNumber = UpdateProperty.empty();
 
-  private String cellPhoneNumber;
-  @JsonIgnore
-  private boolean cellPhoneNumberUpdateRequested;
+  private UpdateProperty<String> cellPhoneNumber = UpdateProperty.empty();
 
-  private String notes;
-  @JsonIgnore
-  private boolean notesUpdateRequested;
+  private UpdateProperty<String> notes = UpdateProperty.empty();
 
-  private Set<String> permissions;
-  @JsonIgnore
-  private boolean permissionsUpdateRequested;
+  private UpdateProperty<Set<String>> permissions = UpdateProperty.empty();
 
-  private Set<String> roles;
-  @JsonIgnore
-  private boolean rolesUpdateRequested;
+  private UpdateProperty<Set<String>> roles = UpdateProperty.empty();
 
-  public String getEmail() {
+  public UpdateProperty<String> getEmail() {
     return email;
   }
 
   public void setEmail(String email) {
-    this.email = email;
-    emailUpdateRequested = true;
+    this.email = UpdateProperty.of(email);
   }
 
-  public boolean isEmailUpdateRequested() {
-    return emailUpdateRequested;
-  }
-
-  public Boolean getEnabled() {
+  public UpdateProperty<Boolean> getEnabled() {
     return enabled;
   }
 
   public void setEnabled(Boolean enabled) {
-    this.enabled = enabled;
-    enabledUpdateRequested = true;
+    this.enabled = UpdateProperty.of(enabled);
   }
 
-  public boolean isEnabledUpdateRequested() {
-    return enabledUpdateRequested;
-  }
-
-  public String getPhoneNumber() {
+  public UpdateProperty<String> getPhoneNumber() {
     return phoneNumber;
   }
 
   public void setPhoneNumber(String phoneNumber) {
-    this.phoneNumber = phoneNumber;
-    phoneNumberUpdateRequested = true;
+    this.phoneNumber = UpdateProperty.of(phoneNumber);
   }
 
-  public boolean isPhoneNumberUpdateRequested() {
-    return phoneNumberUpdateRequested;
-  }
-
-  public String getPhoneExtensionNumber() {
+  public UpdateProperty<String> getPhoneExtensionNumber() {
     return phoneExtensionNumber;
   }
 
   public void setPhoneExtensionNumber(String phoneExtensionNumber) {
-    this.phoneExtensionNumber = phoneExtensionNumber;
-    phoneExtensionNumberUpdateRequested = true;
+    this.phoneExtensionNumber = UpdateProperty.of(phoneExtensionNumber);
   }
 
-  public boolean isPhoneExtensionNumberUpdateRequested() {
-    return phoneExtensionNumberUpdateRequested;
-  }
-
-  public String getCellPhoneNumber() {
+  public UpdateProperty<String> getCellPhoneNumber() {
     return cellPhoneNumber;
   }
 
   public void setCellPhoneNumber(String cellPhoneNumber) {
-    this.cellPhoneNumber = cellPhoneNumber;
-    cellPhoneNumberUpdateRequested = true;
+    this.cellPhoneNumber = UpdateProperty.of(cellPhoneNumber);
   }
 
-  public boolean isCellPhoneNumberUpdateRequested() {
-    return cellPhoneNumberUpdateRequested;
-  }
-
-  public Set<String> getPermissions() {
+  public UpdateProperty<Set<String>> getPermissions() {
     return permissions;
   }
 
   public void setPermissions(Set<String> permissions) {
-    this.permissions = permissions;
-    permissionsUpdateRequested = true;
+    this.permissions = UpdateProperty.of(permissions);
   }
 
-  public boolean isPermissionsUpdateRequested() {
-    return permissionsUpdateRequested;
-  }
-
-  public Set<String> getRoles() {
+  public UpdateProperty<Set<String>> getRoles() {
     return roles;
   }
 
   public void setRoles(Set<String> roles) {
-    this.roles = roles;
-    rolesUpdateRequested = true;
+    this.roles = UpdateProperty.of(roles);
   }
 
-  public boolean isRolesUpdateRequested() {
-    return rolesUpdateRequested;
-  }
-
-  public String getNotes() {
+  public UpdateProperty<String> getNotes() {
     return notes;
   }
 
   public void setNotes(String notes) {
-    this.notes = notes;
-    notesUpdateRequested = true;
+    this.notes = UpdateProperty.of(notes);
   }
 
-  public boolean isNotesUpdateRequested() {
-    return notesUpdateRequested;
+  public static class UpdateProperty<T> implements Serializable {
+
+    private static final long serialVersionUID = -8748009502032919925L;
+
+    private final boolean isSet;
+    private final T value;
+
+    private UpdateProperty(boolean isSet, T value) {
+      this.isSet = isSet;
+      this.value = value;
+    }
+
+    static <T> UpdateProperty<T> empty() {
+      return new UpdateProperty<>(false, null);
+    }
+
+    static <T> UpdateProperty<T> of(T value) {
+      return new UpdateProperty<>(true, value);
+    }
+
+    public boolean isSet() {
+      return isSet;
+    }
+
+    public T get() {
+      return value;
+    }
   }
 }

@@ -77,9 +77,9 @@ public class ValidationServiceImpl implements ValidationService {
 
   @Override
   public void validateUserUpdate(User existedUser, UserUpdate updateUserDto) {
-    validatePhoneNumber(updateUserDto.getPhoneNumber());
-    validatePhoneExtension(updateUserDto.getPhoneExtensionNumber());
-    validateCellPhoneNumber(updateUserDto.getCellPhoneNumber());
+    validatePhoneNumber(updateUserDto.getPhoneNumber().get());
+    validatePhoneExtension(updateUserDto.getPhoneExtensionNumber().get());
+    validateCellPhoneNumber(updateUserDto.getCellPhoneNumber().get());
     validateNotAllRolesAreRemovedAtUpdate(updateUserDto);
     validateNewUserRolesAreAllowedAtUpdate(updateUserDto);
     validateUpdateByCansPermission(existedUser, updateUserDto);
@@ -148,7 +148,7 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateNotAllRolesAreRemovedAtUpdate(UserUpdate updateUserDto) {
-    Collection<String> newUserRoles = updateUserDto.getRoles();
+    Collection<String> newUserRoles = updateUserDto.getRoles().get();
 
     if (newUserRoles == null) {//it means that roles are not edited
       return;
@@ -160,7 +160,7 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateNewUserRolesAreAllowedAtUpdate(UserUpdate updateUserDto) {
-    validateByAllowedRoles(updateUserDto.getRoles(), UNABLE_UPDATE_UNALLOWED_ROLES);
+    validateByAllowedRoles(updateUserDto.getRoles().get(), UNABLE_UPDATE_UNALLOWED_ROLES);
   }
 
   private void validateByAllowedRoles(Collection<String> roles, MessageCode errorCode) {
@@ -184,7 +184,7 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateUpdateByCansPermission(User existedUser, UserUpdate updateUserDto) {
-    validateByCansPermission(updateUserDto.getPermissions(), isRacfidUser(existedUser),
+    validateByCansPermission(updateUserDto.getPermissions().get(), isRacfidUser(existedUser),
         existedUser.getId(), UNABLE_TO_ASSIGN_CANS_PERMISSION_TO_NON_RACFID_USER);
   }
 
@@ -213,7 +213,7 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateActivateUser(User existedUser, UserUpdate updateUserDto) {
-    if (!canChangeToEnableActiveStatus(updateUserDto.getEnabled(),
+    if (!canChangeToEnableActiveStatus(updateUserDto.getEnabled().get(),
         existedUser.getEnabled())) {
       return;
     }
