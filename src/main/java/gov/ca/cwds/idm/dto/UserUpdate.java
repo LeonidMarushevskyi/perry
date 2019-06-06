@@ -3,6 +3,8 @@ package gov.ca.cwds.idm.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import gov.ca.cwds.idm.dto.serializer.UpdatePropertySerializer;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -28,6 +30,7 @@ public class UserUpdate implements Serializable {
 
   private UpdateProperty<Set<String>> roles = UpdateProperty.empty();
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<String> getEmail() {
     return email;
   }
@@ -36,6 +39,7 @@ public class UserUpdate implements Serializable {
     this.email = UpdateProperty.of(email);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<Boolean> getEnabled() {
     return enabled;
   }
@@ -44,6 +48,7 @@ public class UserUpdate implements Serializable {
     this.enabled = UpdateProperty.of(enabled);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<String> getPhoneNumber() {
     return phoneNumber;
   }
@@ -52,6 +57,7 @@ public class UserUpdate implements Serializable {
     this.phoneNumber = UpdateProperty.of(phoneNumber);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<String> getPhoneExtensionNumber() {
     return phoneExtensionNumber;
   }
@@ -60,6 +66,7 @@ public class UserUpdate implements Serializable {
     this.phoneExtensionNumber = UpdateProperty.of(phoneExtensionNumber);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<String> getCellPhoneNumber() {
     return cellPhoneNumber;
   }
@@ -68,6 +75,7 @@ public class UserUpdate implements Serializable {
     this.cellPhoneNumber = UpdateProperty.of(cellPhoneNumber);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<Set<String>> getPermissions() {
     return permissions;
   }
@@ -76,6 +84,7 @@ public class UserUpdate implements Serializable {
     this.permissions = UpdateProperty.of(permissions);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<Set<String>> getRoles() {
     return roles;
   }
@@ -84,6 +93,7 @@ public class UserUpdate implements Serializable {
     this.roles = UpdateProperty.of(roles);
   }
 
+  @JsonSerialize(using = UpdatePropertySerializer.class)
   public UpdateProperty<String> getNotes() {
     return notes;
   }
