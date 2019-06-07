@@ -42,6 +42,7 @@ import gov.ca.cwds.idm.event.UserCreatedEvent;
 import gov.ca.cwds.idm.event.UserEnabledStatusChangedEvent;
 import gov.ca.cwds.idm.event.UserRegistrationResentEvent;
 import gov.ca.cwds.idm.event.UserRoleChangedEvent;
+import gov.ca.cwds.idm.event.WorkerPhoneChangedEvent;
 import gov.ca.cwds.idm.exception.AdminAuthorizationException;
 import gov.ca.cwds.idm.exception.UserValidationException;
 import gov.ca.cwds.idm.persistence.ns.OperationType;
@@ -51,6 +52,7 @@ import gov.ca.cwds.idm.service.authorization.AuthorizationService;
 import gov.ca.cwds.idm.service.cognito.CognitoServiceFacade;
 import gov.ca.cwds.idm.service.cognito.attribute.StandardUserAttribute;
 import gov.ca.cwds.idm.service.diff.BooleanDiff;
+import gov.ca.cwds.idm.service.diff.StringDiff;
 import gov.ca.cwds.idm.service.diff.UpdateDifference;
 import gov.ca.cwds.idm.service.exception.ExceptionFactory;
 import gov.ca.cwds.idm.service.execution.OptionalExecution;
@@ -62,8 +64,8 @@ import gov.ca.cwds.service.messages.MessageCode;
 import gov.ca.cwds.service.messages.MessagesService;
 import gov.ca.cwds.util.Utils;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -261,31 +263,62 @@ public class IdmServiceImpl implements IdmService {
   private List<AuditEvent> createUserUpdateEvents(UserUpdateRequest userUpdateRequest) {
     User existedUser = userUpdateRequest.getExistedUser();
     UpdateDifference updateDifference = userUpdateRequest.getUpdateDifference();
-    List<AuditEvent> auditEvents = new ArrayList<>(5);
+    List<AuditEvent> auditEvents = new LinkedList<>();
 
-    updateDifference.getRolesDiff().ifPresent(rolesDiff ->
-        auditEvents.add(
-            new UserRoleChangedEvent(existedUser, rolesDiff)));
+    addRoleChangedEvent(existedUser, updateDifference, auditEvents);
+    addNotesChangedEvent(existedUser, updateDifference, auditEvents);
+    addPermissionsChangedEvent(existedUser, updateDifference, auditEvents);
+    addEmailChangedEvent(existedUser, updateDifference, auditEvents);
+    addCellPhoneChangedEvent(existedUser, updateDifference, auditEvents);
+    addWorkerPhoneChangedEvent(existedUser, updateDifference, auditEvents);
 
-    updateDifference.getNotesDiff().ifPresent(notesDiff ->
-        auditEvents.add(new NotesChangedEvent(existedUser, notesDiff)));
+    return auditEvents;
+  }
 
+  private void addWorkerPhoneChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
+    Optional<StringDiff> optPhoneNumberDiff = updateDifference.getPhoneNumberDiff();
+    Optional<StringDiff> optExtNumberDiff = updateDifference.getPhoneExtensionNumberDiff();
+    if(optPhoneNumberDiff.isPresent() || optExtNumberDiff.isPresent()) {
+      auditEvents.add(new WorkerPhoneChangedEvent(existedUser, optPhoneNumberDiff, optExtNumberDiff));
+    }
+  }
+
+  private void addCellPhoneChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
+    updateDifference.getCellPhoneNumberDiff().ifPresent(cellPhoneNumberDiff ->
+        auditEvents.add(new CellPhoneChangedEvent(existedUser, cellPhoneNumberDiff))
+    );
+  }
+
+  private void addEmailChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
+    updateDifference.getEmailDiff().ifPresent(emailDiff ->
+        auditEvents.add(new EmailChangedEvent(existedUser, emailDiff))
+    );
+  }
+
+  private void addPermissionsChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
     updateDifference.getPermissionsDiff().ifPresent(permissionsDiff -> {
           List<Permission> permissions = dictionaryProvider.getPermissions();
           auditEvents.add(
               new PermissionsChangedEvent(existedUser, permissionsDiff, permissions));
         }
     );
+  }
 
-    updateDifference.getEmailDiff().ifPresent(emailDiff ->
-        auditEvents.add(new EmailChangedEvent(existedUser, emailDiff))
-    );
+  private void addNotesChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
+    updateDifference.getNotesDiff().ifPresent(notesDiff ->
+        auditEvents.add(new NotesChangedEvent(existedUser, notesDiff)));
+  }
 
-    updateDifference.getCellPhoneNumberDiff().ifPresent(cellPhoneNumber ->
-        auditEvents.add(new CellPhoneChangedEvent(existedUser, cellPhoneNumber))
-    );
-
-    return auditEvents;
+  private void addRoleChangedEvent(User existedUser, UpdateDifference updateDifference,
+      List<AuditEvent> auditEvents) {
+    updateDifference.getRolesDiff().ifPresent(rolesDiff ->
+        auditEvents.add(
+            new UserRoleChangedEvent(existedUser, rolesDiff)));
   }
 
   private ExecutionStatus updateUserAttributes(UserUpdateRequest userUpdateRequest) {

@@ -14,6 +14,7 @@ import static gov.ca.cwds.idm.event.UserLockedEvent.UNLOCKED;
 import static gov.ca.cwds.idm.event.UserRegistrationCompleteEvent.EVENT_TYPE_USER_REGISTRATION_COMPLETE;
 import static gov.ca.cwds.idm.event.UserRegistrationCompleteEvent.REGISTERED;
 import static gov.ca.cwds.idm.event.UserRegistrationCompleteEvent.UNREGISTERED;
+import static gov.ca.cwds.idm.event.WorkerPhoneChangedEvent.EVENT_TYPE_WORKER_PHONE_CHANGED;
 import static gov.ca.cwds.util.CurrentAuthenticatedUserUtil.getCurrentUser;
 import static gov.ca.cwds.util.CurrentAuthenticatedUserUtil.getCurrentUserFirstName;
 import static gov.ca.cwds.util.CurrentAuthenticatedUserUtil.getCurrentUserLastName;
@@ -40,6 +41,8 @@ import gov.ca.cwds.util.CurrentAuthenticatedUserUtil;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -75,6 +78,8 @@ public class UserChangeLogEventTest {
   private static final String OLD_EMAIL = "oldEmail@gmail.com";
   private static final String NEW_NOTES = "new notes";
   private static final String OLD_NOTES = "old notes";
+  private static final String OLD_WORKER_PHONE = "1234567890";
+  private static final String OLD_WORKER_PHONE_EXT = "11";
 
   @Before
   public void before() {
@@ -257,27 +262,110 @@ public class UserChangeLogEventTest {
 
   @Test
   public void testCellPhoneChangedEvent() {
-    final String NEW_CELL_PHONE = "1234567890";
-    final String OLD_CELL_PHONE = "9876543210";
+    final String OLD_CELL_PHONE = "1234567890";
+    final String NEW_CELL_PHONE = "9876543210";
 
     CellPhoneChangedEvent event =
         new CellPhoneChangedEvent(mockUser(), new StringDiff(OLD_CELL_PHONE, NEW_CELL_PHONE));
     Assert.assertThat(event.getEventType(), is(CellPhoneChangedEvent.EVENT_TYPE_CELL_PHONE_CHANGED));
-    Assert.assertThat(event.getEvent().getOldValue(), is(OLD_CELL_PHONE));
-    Assert.assertThat(event.getEvent().getNewValue(), is(NEW_CELL_PHONE));
+    Assert.assertThat(event.getEvent().getOldValue(), is("(123) 456-7890"));
+    Assert.assertThat(event.getEvent().getNewValue(), is("(987) 654-3210"));
     Assert.assertThat(event.getEvent().getUserRoles(), is("CWS Worker, County Administrator"));
 
     event = new CellPhoneChangedEvent(mockUser(), new StringDiff(null, NEW_CELL_PHONE));
     Assert.assertThat(event.getEventType(), is(CellPhoneChangedEvent.EVENT_TYPE_CELL_PHONE_CHANGED));
     Assert.assertThat(event.getEvent().getOldValue(), is(nullValue()));
-    Assert.assertThat(event.getEvent().getNewValue(), is(NEW_CELL_PHONE));
+    Assert.assertThat(event.getEvent().getNewValue(), is("(987) 654-3210"));
     Assert.assertThat(event.getEvent().getUserRoles(), is("CWS Worker, County Administrator"));
 
     event = new CellPhoneChangedEvent(mockUser(), new StringDiff(OLD_CELL_PHONE, null));
     Assert.assertThat(event.getEventType(), is(CellPhoneChangedEvent.EVENT_TYPE_CELL_PHONE_CHANGED));
-    Assert.assertThat(event.getEvent().getOldValue(), is(OLD_CELL_PHONE));
+    Assert.assertThat(event.getEvent().getOldValue(), is("(123) 456-7890"));
     Assert.assertThat(event.getEvent().getNewValue(), is(nullValue()));
     Assert.assertThat(event.getEvent().getUserRoles(), is("CWS Worker, County Administrator"));
+  }
+
+  @Test
+  public void testWorkerPhoneChangedEvent() {
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "9876543210",
+        "11", "22",
+        "(123) 456-7890 Ext 11", "(987) 654-3210 Ext 22");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "9876543210",
+        null, "22",
+        "(123) 456-7890", "(987) 654-3210 Ext 22");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "9876543210",
+        "11", null,
+        "(123) 456-7890 Ext 11", "(987) 654-3210");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "9876543210",
+        null, null,
+        "(123) 456-7890", "(987) 654-3210");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "1234567890",
+        "11", "22",
+        "(123) 456-7890 Ext 11", "(123) 456-7890 Ext 22");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "1234567890",
+        null, "22",
+        "(123) 456-7890", "(123) 456-7890 Ext 22");
+
+    assertWorkerPhoneChangeEvent(
+        "1234567890", "1234567890",
+        "11", null,
+        "(123) 456-7890 Ext 11", "(123) 456-7890");
+
+    assertWorkerPhoneChangeEvent(
+        null, "1234567890",
+        "11", "22",
+        "Ext 11", "(123) 456-7890 Ext 22");
+
+    assertWorkerPhoneChangeEvent(
+        null, "1234567890",
+        "11", null,
+        "Ext 11", "(123) 456-7890");
+
+    assertWorkerPhoneChangeEvent(
+        null, "1234567890",
+        null, "22",
+        "", "(123) 456-7890 Ext 22");
+  }
+
+  private void assertWorkerPhoneChangeEvent(
+      String oldPhone, String newPhone,
+      String oldExt, String newExt,
+      String oldValue, String newValue) {
+
+    User existedUser = mockUser();
+    existedUser.setPhoneNumber(oldPhone);
+    existedUser.setPhoneExtensionNumber(oldExt);
+
+    WorkerPhoneChangedEvent event =
+        new WorkerPhoneChangedEvent(
+            existedUser,
+            getOptionalStringDiff(oldPhone, newPhone),
+            getOptionalStringDiff(oldExt, newExt));
+
+    Assert.assertThat(event.getEventType(), is(EVENT_TYPE_WORKER_PHONE_CHANGED));
+    Assert.assertThat(event.getEvent().getOldValue(), is(oldValue));
+    Assert.assertThat(event.getEvent().getNewValue(), is(newValue));
+    Assert.assertThat(event.getEvent().getUserRoles(), is("CWS Worker, County Administrator"));
+  }
+
+  private Optional<StringDiff> getOptionalStringDiff(String oldValue, String newValue) {
+    if(Objects.equals(oldValue, newValue)) {
+      return Optional.empty();
+    } else {
+      return Optional.of(new StringDiff(oldValue, newValue));
+    }
   }
 
   private User mockUser() {
@@ -288,6 +376,8 @@ public class UserChangeLogEventTest {
     user.setCountyName(TEST_COUNTY);
     user.setOfficeId(TEST_OFFICE_ID);
     user.setEmail(OLD_EMAIL);
+    user.setPhoneNumber(OLD_WORKER_PHONE);
+    user.setPhoneExtensionNumber(OLD_WORKER_PHONE_EXT);
     user.setRoles(new HashSet<>(Arrays.asList(CWS_WORKER, COUNTY_ADMIN)));
     user.setPermissions(new TreeSet<>(Arrays.asList(PERMISSION_1, PERMISSION_2)));
     when(getCurrentUserName()).thenReturn(ADMIN_LOGIN);

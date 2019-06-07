@@ -1,5 +1,7 @@
 package gov.ca.cwds.idm.event;
 
+import static gov.ca.cwds.util.PhoneFormatter.formatPhone;
+
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import gov.ca.cwds.idm.dto.User;
@@ -16,7 +18,7 @@ public class CellPhoneChangedEvent extends AdminCausedChangeLogEvent {
   public CellPhoneChangedEvent(User existedUser, StringDiff cellPhoneDiff) {
     super(existedUser);
     setEventType(EVENT_TYPE_CELL_PHONE_CHANGED);
-    setOldValue(cellPhoneDiff.getOldValue());
-    setNewValue(cellPhoneDiff.getNewValue());
+    setOldValue(formatPhone(cellPhoneDiff.getOldValue()));
+    setNewValue(formatPhone(cellPhoneDiff.getNewValue()));
   }
 }
