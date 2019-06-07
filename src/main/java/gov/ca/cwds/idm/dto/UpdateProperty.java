@@ -28,9 +28,9 @@ public class UpdateProperty<T> implements Serializable {
   }
 
   public T get() {
-//    if (!isSet) {
-//      throw new NoSuchElementException("property is not set");
-//    }
+    if (!isSet) {
+      throw new NoSuchElementException("property is not set");
+    }
     return value;
   }
 }

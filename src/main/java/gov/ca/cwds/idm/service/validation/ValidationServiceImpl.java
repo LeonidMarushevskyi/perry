@@ -3,6 +3,7 @@ package gov.ca.cwds.idm.service.validation;
 import static gov.ca.cwds.idm.service.PossibleUserPermissionsService.CANS_PERMISSION_NAME;
 import static gov.ca.cwds.service.messages.MessageCode.ACTIVE_USER_WITH_RAFCID_EXISTS_IN_IDM;
 import static gov.ca.cwds.service.messages.MessageCode.COUNTY_NAME_IS_NOT_PROVIDED;
+import static gov.ca.cwds.service.messages.MessageCode.ENABELED_STATUS_CANNOT_BE_NULL;
 import static gov.ca.cwds.service.messages.MessageCode.FIRST_NAME_IS_NOT_PROVIDED;
 import static gov.ca.cwds.service.messages.MessageCode.INVALID_CELL_PHONE_FORMAT;
 import static gov.ca.cwds.service.messages.MessageCode.INVALID_PHONE_EXTENSION_FORMAT;
@@ -22,6 +23,7 @@ import static gov.ca.cwds.util.Utils.isRacfidUser;
 import static gov.ca.cwds.util.Utils.toCommaDelimitedString;
 import static java.lang.Boolean.FALSE;
 
+import gov.ca.cwds.idm.dto.UpdateProperty;
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.service.cognito.CognitoServiceFacade;
@@ -30,6 +32,7 @@ import gov.ca.cwds.idm.service.role.implementor.AdminRoleImplementorFactory;
 import gov.ca.cwds.service.CwsUserInfoService;
 import gov.ca.cwds.service.messages.MessageCode;
 import java.util.Collection;
+import java.util.Set;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,12 +80,13 @@ public class ValidationServiceImpl implements ValidationService {
 
   @Override
   public void validateUserUpdate(User existedUser, UserUpdate updateUserDto) {
-    validatePhoneNumber(updateUserDto.getPhoneNumber().get());
-    validatePhoneExtension(updateUserDto.getPhoneExtensionNumber().get());
-    validateCellPhoneNumber(updateUserDto.getCellPhoneNumber().get());
+    validateUpdatePhoneNumber(updateUserDto.getPhoneNumber());
+    validateUpdatePhoneExtension(updateUserDto.getPhoneExtensionNumber());
+    validateUpdateCellPhoneNumber(updateUserDto.getCellPhoneNumber());
     validateNotAllRolesAreRemovedAtUpdate(updateUserDto);
     validateNewUserRolesAreAllowedAtUpdate(updateUserDto);
     validateUpdateByCansPermission(existedUser, updateUserDto);
+    validateEnabledNotNull(updateUserDto.getEnabled());
     validateActivateUser(existedUser, updateUserDto);
   }
 
@@ -148,29 +152,31 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateNotAllRolesAreRemovedAtUpdate(UserUpdate updateUserDto) {
-    Collection<String> newUserRoles = updateUserDto.getRoles().get();
-
-    if (newUserRoles == null) {//it means that roles are not edited
+    UpdateProperty<Set<String>> rolesProperty = updateUserDto.getRoles();
+    if(!rolesProperty.isSet()){
       return;
     }
 
-    if (newUserRoles.isEmpty()) {
+    Collection<String> newUserRoles = rolesProperty.get();
+
+    if (newUserRoles == null || newUserRoles.isEmpty()) {
       throwValidationException(UNABLE_TO_REMOVE_ALL_ROLES);
     }
   }
 
   private void validateNewUserRolesAreAllowedAtUpdate(UserUpdate updateUserDto) {
-    validateByAllowedRoles(updateUserDto.getRoles().get(), UNABLE_UPDATE_UNALLOWED_ROLES);
+    UpdateProperty<Set<String>> rolesProperty = updateUserDto.getRoles();
+    if(!rolesProperty.isSet()) {
+      return;
+    }
+
+    validateByAllowedRoles(rolesProperty.get(), UNABLE_UPDATE_UNALLOWED_ROLES);
   }
 
   private void validateByAllowedRoles(Collection<String> roles, MessageCode errorCode) {
 
-    if (roles == null) {
-      return;
-    }
-
     Collection<String> allowedRoles = adminRoleImplementorFactory.getPossibleUserRoles();
-    if (!allowedRoles.containsAll(roles)) {
+    if (roles == null || !allowedRoles.containsAll(roles)) {
       throwValidationException(
           errorCode,
           toCommaDelimitedString(roles),
@@ -184,7 +190,12 @@ public class ValidationServiceImpl implements ValidationService {
   }
 
   private void validateUpdateByCansPermission(User existedUser, UserUpdate updateUserDto) {
-    validateByCansPermission(updateUserDto.getPermissions().get(), isRacfidUser(existedUser),
+    UpdateProperty<Set<String>> permissionsProperty = updateUserDto.getPermissions();
+    if (!permissionsProperty.isSet()) {
+      return;
+    }
+
+    validateByCansPermission(permissionsProperty.get(), isRacfidUser(existedUser),
         existedUser.getId(), UNABLE_TO_ASSIGN_CANS_PERMISSION_TO_NON_RACFID_USER);
   }
 
@@ -212,18 +223,29 @@ public class ValidationServiceImpl implements ValidationService {
     throw exceptionFactory.createValidationException(messageCode, args);
   }
 
-  private void validateActivateUser(User existedUser, UserUpdate updateUserDto) {
-    if (!canChangeToEnableActiveStatus(updateUserDto.getEnabled().get(),
-        existedUser.getEnabled())) {
+  private void validateEnabledNotNull(UpdateProperty<Boolean> enabledProperty){
+    if (!enabledProperty.isSet()) {
       return;
     }
-    String racfId = existedUser.getRacfid();
-    if (StringUtils.isNotBlank(racfId)) {
-      validateActivateUser(racfId);
+    if(enabledProperty.get() == null){
+      throwValidationException(ENABELED_STATUS_CANNOT_BE_NULL);
     }
   }
 
-  private static boolean canChangeToEnableActiveStatus(Boolean newEnabled, Boolean currentEnabled) {
+  private void validateActivateUser(User existedUser, UserUpdate updateUserDto) {
+    UpdateProperty<Boolean> enabledProperty = updateUserDto.getEnabled();
+    if (!enabledProperty.isSet()) {
+      return;
+    }
+    if (changeToEnableActiveStatus(enabledProperty.get(), existedUser.getEnabled())) {
+      String racfId = existedUser.getRacfid();
+      if (StringUtils.isNotBlank(racfId)) {
+        validateActivateUser(racfId);
+      }
+    }
+  }
+
+  private static boolean changeToEnableActiveStatus(Boolean newEnabled, Boolean currentEnabled) {
     return newEnabled != null && !newEnabled.equals(currentEnabled) && newEnabled;
   }
 
@@ -245,11 +267,23 @@ public class ValidationServiceImpl implements ValidationService {
     );
   }
 
+  private void validateUpdatePhoneNumber(UpdateProperty<String> newPhoneNumber) {
+    if(newPhoneNumber.isSet()) {
+      validatePhoneNumber(newPhoneNumber.get());
+    }
+  }
+
   void validatePhoneExtension(String newPhoneExtension) {
     validateOptionalStringProperty(
         newPhoneExtension,
         PHONE_EXTENSION_PATTERN_VALIDATOR,
         INVALID_PHONE_EXTENSION_FORMAT);
+  }
+
+  private void validateUpdatePhoneExtension(UpdateProperty<String> newPhoneExtension) {
+    if(newPhoneExtension.isSet()) {
+      validatePhoneExtension(newPhoneExtension.get());
+    }
   }
 
   void validateCellPhoneNumber(String newPhoneNumber) {
@@ -260,15 +294,17 @@ public class ValidationServiceImpl implements ValidationService {
     );
   }
 
+  private void validateUpdateCellPhoneNumber(UpdateProperty<String> newPhoneNumber) {
+    if(newPhoneNumber.isSet()){
+      validateCellPhoneNumber(newPhoneNumber.get());
+    }
+  }
+
   private void validateRequiredStringProperty(
       String newValue,
       PatternValidator patternValidator,
       MessageCode absenceErrCode,
       MessageCode formatErrCode) {
-
-    if (newValue == null) {
-      return;
-    }
 
     if(StringUtils.isBlank(newValue)){
       throwValidationException(absenceErrCode);
