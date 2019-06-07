@@ -114,4 +114,8 @@ public class UpdateDifference {
   public Optional<StringSetDiff> getRolesDiff() {
     return Optional.ofNullable(rolesDiff);
   }
+
+  private <T> Set<T> nullToEmptySet(Set<T> input) {
+    return input == null ? new LinkedHashSet<>() : input;
+  }
 }
