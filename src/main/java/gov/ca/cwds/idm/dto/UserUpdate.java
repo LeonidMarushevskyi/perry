@@ -32,7 +32,6 @@ public class UserUpdate implements Serializable {
   private UpdateProperty<Set<String>> roles = UpdateProperty.empty();
 
   @JsonSerialize(using = UpdatePropertySerializer.class)
-  @JsonFilter("isSetFilter")
   public UpdateProperty<String> getEmail() {
     return email;
   }
