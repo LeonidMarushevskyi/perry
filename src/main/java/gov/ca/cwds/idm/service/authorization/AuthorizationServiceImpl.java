@@ -3,6 +3,7 @@ package gov.ca.cwds.idm.service.authorization;
 import static gov.ca.cwds.service.messages.MessageCode.ADMIN_CANNOT_UPDATE_HIMSELF;
 import static gov.ca.cwds.util.CurrentAuthenticatedUserUtil.getCurrentUserName;
 
+import gov.ca.cwds.idm.dto.UpdateProperty;
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.exception.AdminAuthorizationException;
@@ -83,21 +84,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
   }
 
   private boolean wasRolesActuallyEdited(User user, UserUpdate updateUserDto) {
-    return wasActuallyEdited(
-        user.getRoles(),
-        updateUserDto.getRoles().get());
+    return wasActuallyEdited(user.getRoles(), updateUserDto.getRoles());
   }
 
   private boolean wasPermissionsActuallyEdited(User user, UserUpdate updateUserDto) {
-    return wasActuallyEdited(
-        user.getPermissions(),
-        updateUserDto.getPermissions().get());
+    return wasActuallyEdited(user.getPermissions(), updateUserDto.getPermissions());
   }
 
-  private boolean wasActuallyEdited(Set<String> oldSet, Set<String> newSet) {
-    return !CollectionUtils.isEqualCollection(oldSet, newSet);
+  private boolean wasActuallyEdited(Set<String> oldSet, UpdateProperty<Set<String>> newSet) {
+    return newSet.isSet() && !CollectionUtils.isEqualCollection(oldSet, newSet.get());
   }
-
 
   private void checkCanEditRoles(User user) {
     getAdminActionsAuthorizer(user).checkCanEditRoles();

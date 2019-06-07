@@ -1,8 +1,8 @@
 package gov.ca.cwds.idm.service.diff;
 
+import gov.ca.cwds.idm.dto.UpdateProperty;
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
-import gov.ca.cwds.idm.dto.UserUpdate.UpdateProperty;
 import gov.ca.cwds.util.Utils;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -45,32 +45,31 @@ public class UpdateDifference {
   }
 
   private StringDiff createStringDiff(String oldValue, UpdateProperty<String> newValue) {
-    return createDiff(newValue.isSet(), oldValue, newValue.get(), Utils::blankToNull, StringDiff::new);
+    return createDiff(oldValue, newValue, Utils::blankToNull, StringDiff::new);
   }
 
   private StringDiff createEmailDiff(String oldValue, UpdateProperty<String> newValue) {
-    return createDiff(newValue.isSet(), oldValue, newValue.get(),
-        e -> Utils.toLowerCase(Utils.blankToNull(e)), StringDiff::new);
+    return createDiff(oldValue, newValue, e -> Utils.toLowerCase(Utils.blankToNull(e)),
+        StringDiff::new);
   }
 
   private BooleanDiff createBooleanDiff(Boolean oldValue, UpdateProperty<Boolean> newValue) {
-    return createDiff(newValue.isSet(), oldValue, newValue.get(), BooleanDiff::new);
+    return createDiff(oldValue, newValue, BooleanDiff::new);
   }
 
   private StringSetDiff createStringSetDiff(
       Set<String> oldValue, UpdateProperty<Set<String>> newValue) {
-    return createDiff(newValue.isSet(), oldValue, newValue.get(), this::nullToEmptySet,
-        StringSetDiff::new);
+    return createDiff(oldValue, newValue, this::nullToEmptySet, StringSetDiff::new);
   }
 
-  private <T, R> R createDiff(boolean updateRequested, T oldValue, T newValue,
+  private <T, R> R createDiff(T oldValue, UpdateProperty<T> newValue,
       Function<T, T> newValueNormalizer, BiFunction<T, T, R> diffConstructor) {
 
-    if (!updateRequested) {
+    if (!newValue.isSet()) {
       return null;
     }
 
-    T normalizedNewValue = newValueNormalizer.apply(newValue);
+    T normalizedNewValue = newValueNormalizer.apply(newValue.get());
 
     if (!Objects.equals(oldValue, normalizedNewValue)) {
       return diffConstructor.apply(oldValue, normalizedNewValue);
@@ -79,9 +78,9 @@ public class UpdateDifference {
     }
   }
 
-  private <T, R> R createDiff(boolean updateRequested, T oldValue, T newValue,
+  private <T, R> R createDiff(T oldValue, UpdateProperty<T> newValue,
       BiFunction<T, T, R> diffConstructor) {
-    return createDiff(updateRequested, oldValue, newValue, t -> t, diffConstructor);
+    return createDiff(oldValue, newValue, t -> t, diffConstructor);
   }
 
   public Optional<StringDiff> getEmailDiff() {

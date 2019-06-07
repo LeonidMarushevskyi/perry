@@ -1,5 +1,6 @@
 package gov.ca.cwds.idm.dto;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -8,7 +9,7 @@ import gov.ca.cwds.idm.dto.serializer.UpdatePropertySerializer;
 import java.io.Serializable;
 import java.util.Set;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class UserUpdate implements Serializable {
 
@@ -31,6 +32,7 @@ public class UserUpdate implements Serializable {
   private UpdateProperty<Set<String>> roles = UpdateProperty.empty();
 
   @JsonSerialize(using = UpdatePropertySerializer.class)
+  @JsonFilter("isSetFilter")
   public UpdateProperty<String> getEmail() {
     return email;
   }
@@ -100,34 +102,5 @@ public class UserUpdate implements Serializable {
 
   public void setNotes(String notes) {
     this.notes = UpdateProperty.of(notes);
-  }
-
-  public static class UpdateProperty<T> implements Serializable {
-
-    private static final long serialVersionUID = -8748009502032919925L;
-
-    private final boolean isSet;
-    private final T value;
-
-    private UpdateProperty(boolean isSet, T value) {
-      this.isSet = isSet;
-      this.value = value;
-    }
-
-    static <T> UpdateProperty<T> empty() {
-      return new UpdateProperty<>(false, null);
-    }
-
-    static <T> UpdateProperty<T> of(T value) {
-      return new UpdateProperty<>(true, value);
-    }
-
-    public boolean isSet() {
-      return isSet;
-    }
-
-    public T get() {
-      return value;
-    }
   }
 }
