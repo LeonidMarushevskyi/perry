@@ -5,6 +5,7 @@ import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.service.role.implementor.AdminActionsAuthorizerFactory;
 import gov.ca.cwds.util.Utils;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -48,20 +49,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
   @Override
   public List<String> getAllowedUiRolesForUpdate(User existedUser) {
-
-    List<String> allowedRoles = new LinkedList<>();
-
-    List<String> allRoles = Roles.getAllRolesUsedByUI();
-
-    for (String role : allRoles) {
-      UserUpdate updateUser = new UserUpdate();
-      updateUser.setRoles(Utils.toSet(role));
-
-      if (canUpdateUser(existedUser, updateUser)) {
-        allowedRoles.add(role);
-      }
+    AdminActionsAuthorizer authorizer = getAdminActionsAuthorizer(existedUser, new UserUpdate());
+    boolean userCanBeUpdated = authorizer.canUpdateUser();
+    if (userCanBeUpdated) {
+      return authorizer.getPossibleRolesForUpdate();
+    } else {
+      return Collections.emptyList();
     }
-    return allowedRoles;
   }
 
   private AdminActionsAuthorizer getAdminActionsAuthorizer(User user) {

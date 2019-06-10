@@ -10,6 +10,8 @@ import static gov.ca.cwds.config.api.idm.Roles.SUPER_ADMIN;
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.service.rule.ErrorRuleList;
+import java.util.Arrays;
+import java.util.List;
 
 class SuperAdminAuthorizer extends AbstractAdminActionsAuthorizer {
 
@@ -46,5 +48,11 @@ class SuperAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   @Override
   public ErrorRuleList getResendInvitationMessageRules() {
     return new ErrorRuleList();
+  }
+
+  @Override
+  public List<String> getPossibleRolesForUpdate() {
+    return Arrays.asList(
+        SUPER_ADMIN, STATE_ADMIN, COUNTY_ADMIN, OFFICE_ADMIN, CWS_WORKER, CALS_EXTERNAL_WORKER);
   }
 }

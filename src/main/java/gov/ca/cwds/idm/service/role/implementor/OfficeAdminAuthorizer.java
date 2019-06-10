@@ -2,6 +2,8 @@ package gov.ca.cwds.idm.service.role.implementor;
 
 import static gov.ca.cwds.config.api.idm.Roles.CWS_WORKER;
 import static gov.ca.cwds.config.api.idm.Roles.OFFICE_ADMIN;
+import static gov.ca.cwds.idm.service.authorization.UserRolesService.isCwsWorker;
+import static gov.ca.cwds.idm.service.authorization.UserRolesService.isOfficeAdmin;
 import static gov.ca.cwds.service.messages.MessageCode.NOT_AUTHORIZED_TO_ADD_USER_FOR_OTHER_OFFICE;
 import static gov.ca.cwds.service.messages.MessageCode.NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE;
 import static gov.ca.cwds.service.messages.MessageCode.NOT_SUPER_ADMIN_CANNOT_VIEW_USERS_WITH_SUPER_ADMIN_ROLE;
@@ -15,6 +17,9 @@ import static gov.ca.cwds.service.messages.MessageCode.OFFICE_ADMIN_CANNOT_VIEW_
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
 import gov.ca.cwds.idm.service.rule.ErrorRuleList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 class OfficeAdminAuthorizer extends AbstractAdminActionsAuthorizer {
 
@@ -57,5 +62,16 @@ class OfficeAdminAuthorizer extends AbstractAdminActionsAuthorizer {
     return new ErrorRuleList()
         .add(rules.adminAndUserAreInTheSameOffice(
             OFFICE_ADMIN_CANNOT_RESEND_INVITATION_FOR_USER_FROM_OTHER_OFFICE));
+  }
+
+  @Override
+  public List<String> getPossibleRolesForUpdate() {
+    if(isOfficeAdmin(getUser())) {
+      return Arrays.asList(OFFICE_ADMIN, CWS_WORKER);
+    } else if(isCwsWorker(getUser())){
+      return Arrays.asList(CWS_WORKER);
+    } else {
+      return Collections.emptyList();
+    }
   }
 }
