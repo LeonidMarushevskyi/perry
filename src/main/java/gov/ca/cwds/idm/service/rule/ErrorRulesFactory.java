@@ -126,13 +126,30 @@ public class ErrorRulesFactory {
     return userChangesRolesOnlyTo(STATE_ADMIN,  allowedRoles);
   }
 
+  public final ErrorRule userRolesMayBeChangedTo(String... allowedRoles) {
+    return userChangesRolesOnlyTo(STATE_ADMIN,  allowedRoles);
+  }
+
+  public ErrorRule userChangesRolesOnlyTo(List<String> allowedRolesList) {
+    Set<String> newRoles = userUpdate.getRoles();
+
+    return new ErrorRule(
+        () ->
+            newRoles != null && (!allowedRolesList.containsAll(newRoles)),
+        () ->
+            createValidationException(
+                UNABLE_UPDATE_UNALLOWED_ROLES,
+                toCommaDelimitedString(newRoles),
+                toCommaDelimitedString(allowedRolesList)));
+  }
+
   private ErrorRule rolesAreNotEdited(String userMainRole,
       MessageCode errorCode) {
 
     return new ErrorRule(
         () -> userUpdate.getRoles() != null
             && isUserWithMainRole(user, userMainRole)
-            && !Utils.toSet(userMainRole).equals(userUpdate.getRoles()),
+            && !user.getRoles().equals(userUpdate.getRoles()),
         () -> createAuthorizationException(errorCode, user.getId()));
   }
 

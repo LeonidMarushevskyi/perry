@@ -13,6 +13,8 @@ import java.util.Set;
 
 public class MainRoleFilter {
 
+  public static final String NO_ROLE_SIGN = "";
+
   private MainRoleFilter() {
   }
 
@@ -26,7 +28,7 @@ public class MainRoleFilter {
       return result;
     }
     String mainRole = getMainRole(roles);
-    if(mainRole != null) {
+    if (!mainRole.equals(NO_ROLE_SIGN)) {
       result.add(mainRole);
     }
     return result;
@@ -38,7 +40,7 @@ public class MainRoleFilter {
 
   private static String getMainRole(Set<String> roles) {
     int maxRoleValue = 0;
-    String maxRole = null;
+    String maxRole = NO_ROLE_SIGN;
 
     for(String role : roles) {
       int roleValue = getRoleValue(role);
