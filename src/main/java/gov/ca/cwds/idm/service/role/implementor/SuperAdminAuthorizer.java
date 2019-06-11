@@ -27,7 +27,7 @@ class SuperAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   @Override
   public ErrorRuleList getCreateUserRules() {
     return new ErrorRuleList()
-        .add(rules.createdUserRolesMayBe(
+        .add(rules.createdUserRolesMayBeOnly(
             SUPER_ADMIN, STATE_ADMIN, COUNTY_ADMIN, OFFICE_ADMIN, CWS_WORKER, CALS_EXTERNAL_WORKER));
   }
 
@@ -35,7 +35,7 @@ class SuperAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   public ErrorRuleList getUpdateUserRules() {
     return new ErrorRuleList()
         .add(rules.userAndAdminAreNotTheSameUser())
-        .add(rules.userChangesRolesOnlyTo(getPossibleRolesForUpdate()));
+        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
   }
 
   @Override

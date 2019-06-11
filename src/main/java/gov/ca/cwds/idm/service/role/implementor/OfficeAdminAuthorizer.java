@@ -45,7 +45,7 @@ class OfficeAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   public ErrorRuleList getCreateUserRules() {
     return new ErrorRuleList()
         .add(rules.adminAndUserAreInTheSameOffice(NOT_AUTHORIZED_TO_ADD_USER_FOR_OTHER_OFFICE))
-        .add(rules.createdUserRolesMayBe(CWS_WORKER));
+        .add(rules.createdUserRolesMayBeOnly(CWS_WORKER));
   }
 
   @Override
@@ -57,7 +57,7 @@ class OfficeAdminAuthorizer extends AbstractAdminActionsAuthorizer {
         .add(rules.userIsNotStateAdmin(OFFICE_ADMIN_CANNOT_UPDATE_STATE_ADMIN))
         .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
         .add(rules.calsExternalWorkerRolesCanNotBeChanged())
-        .add(rules.userChangesRolesOnlyTo(getPossibleRolesForUpdate()));
+        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
   }
 
   @Override

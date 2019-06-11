@@ -43,7 +43,7 @@ class CountyAdminAuthorizer extends AbstractAdminActionsAuthorizer {
     return new ErrorRuleList()
         .add(rules.adminAndUserAreInTheSameCounty(NOT_AUTHORIZED_TO_ADD_USER_FOR_OTHER_COUNTY,
             getUser().getCountyName()))
-        .add(rules.createdUserRolesMayBe(OFFICE_ADMIN, CWS_WORKER));
+        .add(rules.createdUserRolesMayBeOnly(OFFICE_ADMIN, CWS_WORKER));
   }
 
   @Override
@@ -62,7 +62,7 @@ class CountyAdminAuthorizer extends AbstractAdminActionsAuthorizer {
         .add(rules.userIsNotStateAdmin(COUNTY_ADMIN_CANNOT_UPDATE_STATE_ADMIN))
         .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
         .add(rules.calsExternalWorkerRolesCanNotBeChanged())
-        .add(rules.userChangesRolesOnlyTo(getPossibleRolesForUpdate()));
+        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
   }
 
   @Override

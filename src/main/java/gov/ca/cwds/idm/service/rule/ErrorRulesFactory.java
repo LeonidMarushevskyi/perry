@@ -93,30 +93,28 @@ public class ErrorRulesFactory {
     return rolesAreNotEdited(CALS_EXTERNAL_WORKER, CANNOT_EDIT_ROLES_OF_CALS_EXTERNAL_WORKER);
   }
 
-  public final ErrorRule createdUserRolesMayBe(String... allowedRoles) {
-    Collection<String> roles = user.getRoles();
-    List<String> allowedRolesList = asList(allowedRoles);
-
-    return new ErrorRule(
-        () -> roles != null && !allowedRolesList.containsAll(roles),
-        () -> createValidationException(
-            UNABLE_TO_CREATE_USER_WITH_UNALLOWED_ROLES,
-            toCommaDelimitedString(roles),
-            toCommaDelimitedString(allowedRolesList))
-    );
+  public final ErrorRule createdUserRolesMayBeOnly(String... allowedRoles) {
+    return userNewRolesMayBeOnly(
+        UNABLE_TO_CREATE_USER_WITH_UNALLOWED_ROLES, user.getRoles(), allowedRoles);
   }
 
-  public ErrorRule userChangesRolesOnlyTo(List<String> allowedRolesList) {
-    Set<String> newRoles = userUpdate.getRoles();
+  public final ErrorRule updatedUserRolesMayBeOnly(List<String> allowedRolesList) {
+    return userNewRolesMayBeOnly(
+        UNABLE_UPDATE_UNALLOWED_ROLES, userUpdate.getRoles(), allowedRolesList);
+  }
+
+  private ErrorRule userNewRolesMayBeOnly(MessageCode messageCode, Set<String> newRoles, List<String> allowedRolesList) {
 
     return new ErrorRule(
-        () ->
-            newRoles != null && (!allowedRolesList.containsAll(newRoles)),
-        () ->
-            createValidationException(
-                UNABLE_UPDATE_UNALLOWED_ROLES,
+        () -> newRoles != null && (!allowedRolesList.containsAll(newRoles)),
+        () -> createValidationException(
+                messageCode,
                 toCommaDelimitedString(newRoles),
                 toCommaDelimitedString(allowedRolesList)));
+  }
+
+  private ErrorRule userNewRolesMayBeOnly(MessageCode messageCode, Set<String> newRoles, String... allowedRoles) {
+    return userNewRolesMayBeOnly(messageCode, newRoles, asList(allowedRoles));
   }
 
   private ErrorRule rolesAreNotEdited(String userMainRole,

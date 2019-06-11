@@ -33,7 +33,7 @@ class StateAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   @Override
   public ErrorRuleList getCreateUserRules() {
     return new ErrorRuleList()
-        .add(rules.createdUserRolesMayBe(COUNTY_ADMIN, OFFICE_ADMIN, CWS_WORKER));
+        .add(rules.createdUserRolesMayBeOnly(COUNTY_ADMIN, OFFICE_ADMIN, CWS_WORKER));
   }
 
   @Override
@@ -48,7 +48,7 @@ class StateAdminAuthorizer extends AbstractAdminActionsAuthorizer {
         .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
         .add(rules.stateAdminUserRolesCanNotBeChanged())
         .add(rules.calsExternalWorkerRolesCanNotBeChanged())
-        .add(rules.userChangesRolesOnlyTo(getPossibleRolesForUpdate()));
+        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
   }
 
   @Override
