@@ -1,9 +1,6 @@
 package gov.ca.cwds.idm.service.rule;
 
 import static gov.ca.cwds.config.api.idm.Roles.CALS_EXTERNAL_WORKER;
-import static gov.ca.cwds.config.api.idm.Roles.COUNTY_ADMIN;
-import static gov.ca.cwds.config.api.idm.Roles.CWS_WORKER;
-import static gov.ca.cwds.config.api.idm.Roles.OFFICE_ADMIN;
 import static gov.ca.cwds.config.api.idm.Roles.STATE_ADMIN;
 import static gov.ca.cwds.idm.service.authorization.UserRolesService.getStrongestAdminRole;
 import static gov.ca.cwds.idm.service.authorization.UserRolesService.isCalsExternalWorker;
@@ -29,7 +26,6 @@ import gov.ca.cwds.idm.exception.AdminAuthorizationException;
 import gov.ca.cwds.idm.exception.UserValidationException;
 import gov.ca.cwds.idm.service.exception.ExceptionFactory;
 import gov.ca.cwds.service.messages.MessageCode;
-import gov.ca.cwds.util.Utils;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -110,26 +106,6 @@ public class ErrorRulesFactory {
     );
   }
 
-  public final ErrorRule cwsWorkerRolesMayBeChangedTo(String... allowedRoles) {
-    return userChangesRolesOnlyTo(CWS_WORKER, allowedRoles);
-  }
-
-  public final ErrorRule officeAdminUserRolesMayBeChangedTo(String... allowedRoles) {
-    return userChangesRolesOnlyTo(OFFICE_ADMIN,  allowedRoles);
-  }
-
-  public final ErrorRule countyAdminUserRolesMayBeChangedTo(String... allowedRoles) {
-    return userChangesRolesOnlyTo(COUNTY_ADMIN, allowedRoles);
-  }
-
-  public final ErrorRule stateAdminUserRolesMayBeChangedTo(String... allowedRoles) {
-    return userChangesRolesOnlyTo(STATE_ADMIN,  allowedRoles);
-  }
-
-  public final ErrorRule userRolesMayBeChangedTo(String... allowedRoles) {
-    return userChangesRolesOnlyTo(STATE_ADMIN,  allowedRoles);
-  }
-
   public ErrorRule userChangesRolesOnlyTo(List<String> allowedRolesList) {
     Set<String> newRoles = userUpdate.getRoles();
 
@@ -157,23 +133,6 @@ public class ErrorRulesFactory {
     String userCountyName = user.getCountyName();
     String adminCountyName = getCurrentUserCountyName();
     return userCountyName == null || !userCountyName.equals(adminCountyName);
-  }
-
-  private ErrorRule userChangesRolesOnlyTo(String userCurrentRole,
-      String... allowedRoles) {
-    Set<String> newRoles = userUpdate.getRoles();
-    List<String> allowedRolesList = asList(allowedRoles);
-
-    return new ErrorRule(
-        () ->
-            newRoles != null
-                && isUserWithMainRole(user, userCurrentRole)
-                && (!allowedRolesList.containsAll(newRoles)),
-        () ->
-            createValidationException(
-                UNABLE_UPDATE_UNALLOWED_ROLES,
-                toCommaDelimitedString(newRoles),
-                toCommaDelimitedString(allowedRolesList)));
   }
 
   private boolean adminAndUserAreInDifferentOffices() {
