@@ -26,7 +26,6 @@ import gov.ca.cwds.idm.exception.AdminAuthorizationException;
 import gov.ca.cwds.idm.exception.UserValidationException;
 import gov.ca.cwds.idm.service.exception.ExceptionFactory;
 import gov.ca.cwds.service.messages.MessageCode;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 

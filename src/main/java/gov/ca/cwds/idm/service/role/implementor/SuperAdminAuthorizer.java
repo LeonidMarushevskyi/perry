@@ -32,10 +32,7 @@ class SuperAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   }
 
   @Override
-  public ErrorRuleList getUpdateUserRules() {
-    return new ErrorRuleList()
-        .add(rules.userAndAdminAreNotTheSameUser())
-        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
+  public void addCustomUpdateUserRules(ErrorRuleList updateRuleList) {
   }
 
   @Override

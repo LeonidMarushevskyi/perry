@@ -47,7 +47,15 @@ public abstract class AbstractAdminActionsAuthorizer implements AdminActionsAuth
     getResendInvitationMessageRules().check();
   }
 
-  public abstract ErrorRuleList getUpdateUserRules();
+  public final ErrorRuleList getUpdateUserRules() {
+    ErrorRuleList updateRuleList = new ErrorRuleList()
+    .add(rules.userAndAdminAreNotTheSameUser());
+    addCustomUpdateUserRules(updateRuleList);
+    updateRuleList.add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
+    return updateRuleList;
+  }
+
+  public abstract void addCustomUpdateUserRules(ErrorRuleList updateRuleList);
 
   @Override
   public final void checkCanUpdateUser() {

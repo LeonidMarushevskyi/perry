@@ -49,15 +49,13 @@ class OfficeAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   }
 
   @Override
-  public ErrorRuleList getUpdateUserRules() {
-    return new ErrorRuleList()
-        .add(rules.userAndAdminAreNotTheSameUser())
+  public void addCustomUpdateUserRules(ErrorRuleList updateRuleList) {
+    updateRuleList
         .add(rules.adminAndUserAreInTheSameOffice(OFFICE_ADMIN_CANNOT_UPDATE_USER_FROM_OTHER_OFFICE))
         .add(rules.userIsNotCountyAdmin(OFFICE_ADMIN_CANNOT_UPDATE_COUNTY_ADMIN))
         .add(rules.userIsNotStateAdmin(OFFICE_ADMIN_CANNOT_UPDATE_STATE_ADMIN))
         .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
-        .add(rules.calsExternalWorkerRolesCanNotBeChanged())
-        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
+        .add(rules.calsExternalWorkerRolesCanNotBeChanged());
   }
 
   @Override

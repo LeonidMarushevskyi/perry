@@ -1,5 +1,6 @@
 package gov.ca.cwds.idm.service.rule;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,6 +10,11 @@ public class ErrorRuleList {
 
   public ErrorRuleList add(ErrorRule rule) {
     rules.add(rule);
+    return this;
+  }
+
+  public ErrorRuleList addAll(Collection<ErrorRule> rules) {
+    rules.addAll(rules);
     return this;
   }
 

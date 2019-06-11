@@ -18,10 +18,12 @@ import static java.util.Arrays.asList;
 
 import gov.ca.cwds.idm.dto.User;
 import gov.ca.cwds.idm.dto.UserUpdate;
+import gov.ca.cwds.idm.service.rule.ErrorRule;
 import gov.ca.cwds.idm.service.rule.ErrorRuleList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 class CountyAdminAuthorizer extends AbstractAdminActionsAuthorizer {
@@ -54,15 +56,13 @@ class CountyAdminAuthorizer extends AbstractAdminActionsAuthorizer {
   }
 
   @Override
-  public ErrorRuleList getUpdateUserRules() {
-    return new ErrorRuleList()
-        .add(rules.userAndAdminAreNotTheSameUser())
-        .add(rules.adminAndUserAreInTheSameCounty(COUNTY_ADMIN_CANNOT_UPDATE_USER_FROM_OTHER_COUNTY,
-            getUser().getId()))
-        .add(rules.userIsNotStateAdmin(COUNTY_ADMIN_CANNOT_UPDATE_STATE_ADMIN))
-        .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
-        .add(rules.calsExternalWorkerRolesCanNotBeChanged())
-        .add(rules.updatedUserRolesMayBeOnly(getPossibleRolesForUpdate()));
+  public void addCustomUpdateUserRules(ErrorRuleList updateRuleList) {
+    updateRuleList
+    .add(rules.adminAndUserAreInTheSameCounty(COUNTY_ADMIN_CANNOT_UPDATE_USER_FROM_OTHER_COUNTY,
+        getUser().getId()))
+    .add(rules.userIsNotStateAdmin(COUNTY_ADMIN_CANNOT_UPDATE_STATE_ADMIN))
+    .add(rules.userIsNotSuperAdmin(NOT_SUPER_ADMIN_CANNOT_UPDATE_USERS_WITH_SUPER_ADMIN_ROLE))
+    .add(rules.calsExternalWorkerRolesCanNotBeChanged());
   }
 
   @Override
